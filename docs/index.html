@@ -1,0 +1,989 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%8F%A6%3C%2Ftext%3E%3C%2Fsvg%3E">
+<title>Кредитная ведомость</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap">
+<style>body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<style>
+:root{
+  --ground:#EDEFF3; --surface:#FCFCFE; --surface-2:#F4F6FA; --sunken:#E4E8F0;
+  --ink:#171A24; --muted:#5D6478; --faint:#868DA0;
+  --accent:#26379B; --accent-soft:#DEE2F6; --on-accent:#FFFFFF;
+  --interest:#A9662C; --interest-soft:#F4E7D9;
+  --positive:#2C7A57; --positive-soft:#DEEEE5;
+  --hairline:#D8DCE6; --hairline-strong:#BFC5D4;
+  --shadow:0 1px 2px rgba(23,26,36,.05), 0 8px 24px -16px rgba(23,26,36,.28);
+  --focus:#26379B;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0F1118; --surface:#171A23; --surface-2:#1D212C; --sunken:#12151D;
+    --ink:#E6E8F0; --muted:#949BB0; --faint:#6E7588;
+    --accent:#8B9BF7; --accent-soft:#232941; --on-accent:#11131B;
+    --interest:#D79B5E; --interest-soft:#2E241B;
+    --positive:#58B98A; --positive-soft:#16291F;
+    --hairline:#262A36; --hairline-strong:#3A4053;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.9);
+    --focus:#8B9BF7;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0F1118; --surface:#171A23; --surface-2:#1D212C; --sunken:#12151D;
+  --ink:#E6E8F0; --muted:#949BB0; --faint:#6E7588;
+  --accent:#8B9BF7; --accent-soft:#232941; --on-accent:#11131B;
+  --interest:#D79B5E; --interest-soft:#2E241B;
+  --positive:#58B98A; --positive-soft:#16291F;
+  --hairline:#262A36; --hairline-strong:#3A4053;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.9);
+  --focus:#8B9BF7;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px; margin:0 auto; padding:40px 24px 96px; display:flex; flex-direction:column; gap:26px}
+h1,h2,h3{margin:0; text-wrap:balance}
+
+.masthead{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:20px;
+  padding-bottom:20px; border-bottom:1px solid var(--hairline-strong)}
+.masthead h1{font-family:"Instrument Serif",Georgia,serif; font-weight:400; font-size:clamp(34px,5vw,52px); line-height:1.02; letter-spacing:-.01em}
+.masthead h1 em{font-style:italic; color:var(--accent)}
+.sub{color:var(--muted); font-size:13.5px; max-width:52ch; margin-top:9px}
+.stamp{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted); text-align:right; line-height:2}
+.stamp b{color:var(--ink); font-weight:500}
+
+.card{background:var(--surface); border:1px solid var(--hairline); border-radius:4px; box-shadow:var(--shadow)}
+.card-head{display:flex; align-items:center; justify-content:space-between; gap:16px;
+  padding:13px 18px; border-bottom:1px solid var(--hairline)}
+.card-head h2{font-size:14px; font-weight:600; letter-spacing:-.005em}
+.eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--faint)}
+
+.terms{padding:18px; display:grid; grid-template-columns:repeat(auto-fit,minmax(146px,1fr)); gap:15px 18px}
+.field{display:flex; flex-direction:column; gap:5px; min-width:0}
+.field label{font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); font-weight:500}
+.field input, .field select{
+  font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums; font-size:14px;
+  background:var(--sunken); color:var(--ink); border:1px solid var(--hairline);
+  border-radius:3px; padding:8px 10px; width:100%; transition:border-color .12s, background .12s;
+}
+.field select{font-family:"IBM Plex Sans",sans-serif; font-size:13.5px}
+.field input:hover, .field select:hover{border-color:var(--hairline-strong)}
+.field input:focus, .field select:focus{outline:2px solid var(--focus); outline-offset:1px; background:var(--surface)}
+.field .hint{font-size:10.5px; color:var(--faint)}
+
+.summary{display:grid; grid-template-columns:repeat(auto-fit,minmax(184px,1fr)); gap:1px; background:var(--hairline);
+  border:1px solid var(--hairline); border-radius:4px; overflow:hidden; box-shadow:var(--shadow)}
+.kpi{background:var(--surface); padding:15px 18px 17px; display:flex; flex-direction:column; gap:5px; min-width:0}
+.kpi .k-label{font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); font-weight:500}
+.kpi .k-val{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums;
+  font-size:22px; font-weight:500; letter-spacing:-.02em; line-height:1.15}
+.kpi .k-val small{font-size:12px; color:var(--muted); font-weight:400; letter-spacing:0}
+.kpi .k-note{font-size:11.5px; color:var(--faint); line-height:1.35}
+.kpi.is-hero{background:var(--accent-soft)}
+.kpi.is-hero .k-val{color:var(--accent)}
+.delta{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px; font-weight:500; color:var(--positive)}
+.delta.up{color:var(--interest)}
+.delta.zero{color:var(--faint)}
+
+.pay-body{padding:18px; display:flex; flex-direction:column; gap:16px}
+.mode-q{font-size:12px; color:var(--muted); margin:0}
+.modes{display:grid; grid-template-columns:repeat(auto-fit,minmax(252px,1fr)); gap:10px}
+.mode-card{
+  font:inherit; color:var(--ink); text-align:left; cursor:pointer;
+  display:flex; flex-direction:column; gap:5px; padding:13px 15px 12px;
+  background:var(--surface); border:1px solid var(--hairline); border-radius:4px;
+  transition:border-color .12s, background .12s;
+}
+.mode-card:hover{border-color:var(--hairline-strong); background:var(--surface-2)}
+.mode-card[aria-checked="true"]{border-color:var(--accent); background:var(--accent-soft)}
+.mode-card:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+.mc-title{font-size:13.5px; font-weight:600; display:flex; align-items:center; gap:8px}
+.mc-title .dot{width:11px; height:11px; border-radius:50%; border:1px solid var(--hairline-strong); flex:none}
+.mode-card[aria-checked="true"] .mc-title{color:var(--accent)}
+.mode-card[aria-checked="true"] .dot{border-color:var(--accent); background:radial-gradient(circle,var(--accent) 0 3px,transparent 3px)}
+.mc-desc{font-size:12px; color:var(--muted); line-height:1.4}
+.mc-stats{display:flex; flex-direction:column; gap:4px; margin-top:5px; padding-top:9px; border-top:1px solid var(--hairline)}
+.mc-stats i{font-style:normal; display:flex; align-items:baseline; justify-content:space-between; gap:12px; font-size:11.5px; color:var(--muted)}
+.mc-stats i b{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums;
+  font-weight:600; color:var(--ink); white-space:nowrap}
+.mc-stats i b.win{color:var(--positive)}
+.adder-hint{font-size:12px; color:var(--muted); margin:0; max-width:80ch}
+.adder-hint b{color:var(--ink); font-weight:600}
+.adder{display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end}
+.adder .field{flex:1 1 132px}
+.btn{
+  font:inherit; font-size:13px; font-weight:500; padding:9px 16px; border-radius:3px; cursor:pointer;
+  background:var(--accent); color:var(--on-accent); border:1px solid transparent; transition:filter .12s;
+}
+.btn:hover{filter:brightness(1.12)}
+.btn:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+.btn.ghost{background:transparent; color:var(--muted); border-color:var(--hairline)}
+.btn.ghost:hover{color:var(--ink); border-color:var(--hairline-strong); filter:none}
+.chips{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.chip{display:flex; align-items:center; gap:9px; background:var(--surface-2); border:1px solid var(--hairline);
+  border-radius:3px; padding:5px 7px 5px 11px; font-size:12.5px}
+.chip .c-sum{font-family:"IBM Plex Mono",ui-monospace,monospace; font-weight:600; color:var(--accent)}
+.chip .c-when{color:var(--muted)}
+.chip button{border:0; background:transparent; color:var(--faint); cursor:pointer; font-size:15px; line-height:1; padding:2px 5px; border-radius:2px}
+.chip button:hover{color:var(--interest); background:var(--interest-soft)}
+.empty{font-size:12.5px; color:var(--faint); font-style:italic}
+
+.chart-wrap{padding:14px 18px 18px}
+.chart-legend{display:flex; flex-wrap:wrap; gap:18px; font-size:11.5px; color:var(--muted); margin-bottom:12px}
+.chart-legend span{display:flex; align-items:center; gap:7px}
+.swatch{width:15px; height:2px; border-radius:1px; background:var(--accent); flex:none}
+.swatch.dash{background:repeating-linear-gradient(90deg,var(--hairline-strong) 0 4px,transparent 4px 7px)}
+.swatch.owed{background:var(--interest)}
+canvas{display:block; width:100%; height:230px}
+
+.ledger-legend{margin:0; padding:12px 18px; font-size:12px; line-height:1.5; color:var(--muted);
+  border-bottom:1px solid var(--hairline); background:var(--surface-2)}
+.ledger-legend b{color:var(--ink); font-weight:600}
+.ledger-scroll{overflow-x:auto}
+table{border-collapse:collapse; width:100%; min-width:820px; font-size:13px}
+th{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); font-weight:600;
+  text-align:right; padding:10px 12px; border-bottom:1px solid var(--hairline-strong); white-space:nowrap;
+  position:sticky; top:0; background:var(--surface); z-index:2}
+th:first-child{text-align:left}
+td{padding:0; border-bottom:1px solid var(--hairline)}
+.cell{padding:9px 12px; text-align:right; white-space:nowrap;
+  font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
+.cell.txt{text-align:left}
+tr.year-row{cursor:pointer; background:var(--surface-2)}
+tr.year-row:hover{background:var(--sunken)}
+tr.year-row td{border-bottom:1px solid var(--hairline-strong); font-weight:600}
+tr.year-row .cell{padding:11px 12px}
+tr.year-row .caret{display:inline-block; width:11px; color:var(--faint); transition:transform .15s}
+tr.year-row.open .caret{transform:rotate(90deg)}
+tr.year-row .yr{font-size:14px; letter-spacing:-.01em}
+tr.year-row .cnt{font-family:"IBM Plex Sans",sans-serif; font-weight:400; font-size:11px; color:var(--faint); margin-left:9px}
+tr.year-row:focus-visible{outline:2px solid var(--focus); outline-offset:-2px}
+tr.m-row .cell{padding:7px 12px; font-size:12.5px}
+tr.m-row:hover td{background:var(--surface-2)}
+tr.m-row .idx{color:var(--faint); font-size:11px; margin-right:9px}
+.v-princ{color:var(--accent)}
+.v-int{color:var(--interest)}
+.v-extra{color:var(--positive); font-weight:500}
+.v-mute{color:var(--faint)}
+tr.phase-row td{padding:0}
+.phase-note{display:flex; flex-wrap:wrap; gap:5px 16px; align-items:baseline; padding:11px 14px;
+  background:var(--interest-soft); font-size:12px; color:var(--ink)}
+.phase-note b{font-family:"IBM Plex Mono",ui-monospace,monospace; font-weight:600}
+.phase-note .pn-title{font-weight:600; letter-spacing:.02em}
+tr.final-row td{background:var(--positive-soft)}
+tr.final-row .cell{font-weight:600}
+
+.notes{display:grid; grid-template-columns:repeat(auto-fit,minmax(258px,1fr)); gap:22px 34px;
+  padding-top:22px; border-top:1px solid var(--hairline-strong)}
+.note h3{font-size:12px; letter-spacing:.04em; text-transform:uppercase; color:var(--ink); margin-bottom:8px}
+.note p{margin:0 0 9px; font-size:12.5px; color:var(--muted); line-height:1.55}
+.note p:last-child{margin-bottom:0}
+.note code{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px; color:var(--accent);
+  background:var(--accent-soft); padding:1px 5px; border-radius:2px}
+/* ── Мобильная вёрстка ─────────────────── */
+@media (max-width:720px){
+  .wrap{padding:22px 12px 64px; gap:16px}
+  .masthead{flex-direction:column; align-items:flex-start; gap:10px; padding-bottom:16px}
+  .masthead h1{font-size:clamp(30px,9vw,40px)}
+  .sub{font-size:13px}
+  .stamp{text-align:left; line-height:1.85; font-size:10.5px}
+
+  .card-head{padding:12px 14px}
+  .terms{padding:14px; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:13px 14px}
+  .summary{grid-template-columns:repeat(auto-fit,minmax(142px,1fr))}
+  .kpi{padding:12px 13px 14px; gap:4px}
+  .kpi .k-val{font-size:18px}
+  .kpi .k-label{font-size:10.5px}
+
+  .pay-body{padding:14px; gap:14px}
+  .adder .field{flex:1 1 118px}
+  .adder .btn{width:100%; padding:11px 16px}
+  .modes{grid-template-columns:1fr}
+  .chart-wrap{padding:12px 14px 14px}
+  canvas{height:180px}
+  .chart-legend{gap:6px 14px; font-size:11px}
+
+  /* таблица → карточки: без горизонтального скролла */
+  .ledger-legend{padding:11px 14px; font-size:11.5px}
+  .ledger-scroll{overflow-x:visible}
+  table{min-width:0; display:block}
+  thead{display:none}
+  tbody{display:block}
+  tr.year-row, tr.m-row{display:grid; grid-template-columns:1fr 1fr; gap:5px 12px; padding:11px 14px}
+  tr.year-row td, tr.m-row td{display:flex; align-items:baseline; justify-content:space-between;
+    gap:8px; border:0; padding:0; min-width:0}
+  tr.year-row .cell, tr.m-row .cell{padding:0; text-align:right; font-size:12.5px}
+  td[data-label]::before{
+    content:attr(data-label); font-family:"IBM Plex Sans",sans-serif; font-size:10px;
+    letter-spacing:.05em; text-transform:uppercase; color:var(--faint); white-space:nowrap;
+  }
+  .c-extra.is-empty{display:none !important}
+
+  tr.year-row{border-bottom:1px solid var(--hairline-strong); align-items:center}
+  tr.year-row .c-period{grid-column:1/-1; justify-content:flex-start}
+  tr.year-row .c-period .cell{text-align:left; font-size:14px}
+  tr.year-row .c-princ, tr.year-row .c-int, tr.year-row .c-owed{display:none}
+  tr.year-row .c-pay, tr.year-row .c-extra, tr.year-row .c-bal{font-weight:400}
+  tr.year-row .c-pay .cell, tr.year-row .c-extra .cell, tr.year-row .c-bal .cell{font-size:12px}
+  tr.year-row .c-bal{grid-column:1/-1}
+
+  tr.m-row{border-bottom:1px solid var(--hairline)}
+  tr.m-row .c-period{order:1; grid-column:1/-1; justify-content:flex-start}
+  tr.m-row .c-period .cell{text-align:left; font-weight:600; font-size:13px}
+  tr.m-row .c-pay{order:2; grid-column:1/-1; padding-bottom:6px; border-bottom:1px dashed var(--hairline)}
+  tr.m-row .c-pay .cell{font-size:14px; font-weight:600}
+  tr.m-row .c-princ{order:3}
+  tr.m-row .c-int{order:4}
+  tr.m-row .c-extra{order:5; grid-column:1/-1}
+  tr.m-row .c-bal{order:6}
+  tr.m-row .c-owed{order:7}
+  tr.m-row:hover td{background:transparent}
+  tr.final-row{background:var(--positive-soft)}
+  tr.final-row td{background:transparent}
+  tr.phase-row td{display:block}
+  .phase-note{padding:10px 14px; font-size:11.5px}
+  .notes{gap:18px 24px; padding-top:18px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div>
+      <h1>Кредитная <em>ведомость</em></h1>
+      <p class="sub">График по договору с льготным периодом: пять лет платится 0,75 % основного долга и фиксированные проценты, затем остаток и накопленные проценты раскидываются равными долями на оставшийся срок.</p>
+    </div>
+    <div class="stamp">
+      Белорусские рубли<br>
+      <b id="stamp-rate">14,5 %</b> годовых · база 360/30<br>
+      <b id="stamp-term">300 платежей</b>
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Условия договора</h2>
+      <span class="eyebrow">п. 1.1 · 1.6.3</span>
+    </div>
+    <div class="terms">
+      <div class="field">
+        <label for="f-amount">Сумма кредита</label>
+        <input id="f-amount" type="number" step="100" min="1" value="238000">
+        <span class="hint">Br, пункт 1.1</span>
+      </div>
+      <div class="field">
+        <label for="f-rate">Ставка, % годовых</label>
+        <input id="f-rate" type="number" step="0.1" min="0" value="14.5">
+        <span class="hint">на остаток основного долга</span>
+      </div>
+      <div class="field">
+        <label for="f-term">Срок, месяцев</label>
+        <input id="f-term" type="number" step="1" min="2" value="300">
+        <span class="hint">25 лет</span>
+      </div>
+      <div class="field">
+        <label for="f-grace">Льготный период, мес.</label>
+        <input id="f-grace" type="number" step="1" min="0" value="60">
+        <span class="hint">первые 5 лет</span>
+      </div>
+      <div class="field">
+        <label for="f-pct">Долг в льготный, %</label>
+        <input id="f-pct" type="number" step="0.05" min="0" value="0.75">
+        <span class="hint">от суммы п. 1.1</span>
+      </div>
+      <div class="field">
+        <label for="f-fix">Проценты в льготный</label>
+        <input id="f-fix" type="number" step="1" min="0" value="10">
+        <span class="hint">Br в месяц</span>
+      </div>
+      <div class="field">
+        <label for="f-date">Первый платёж</label>
+        <input id="f-date" type="date" value="2026-09-26">
+        <span class="hint">расчётная дата</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="summary" id="summary"></section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Досрочное погашение</h2>
+      <span class="eyebrow">п. 1.6.6</span>
+    </div>
+    <div class="pay-body">
+      <p class="adder-hint">Введённая сумма <b>добавляется к платежу этого месяца</b> и сразу уменьшает основной долг — дальше проценты начисляются на меньший остаток.</p>
+      <div class="adder">
+        <div class="field" style="flex:0 1 168px">
+          <label for="a-kind">Тип</label>
+          <select id="a-kind">
+            <option value="once">Разовая сумма</option>
+            <option value="monthly">Каждый месяц</option>
+          </select>
+        </div>
+        <div class="field" style="flex:0 1 150px">
+          <label for="a-sum">Сумма, Br</label>
+          <input id="a-sum" type="number" step="50" min="1" value="5000">
+        </div>
+        <div class="field">
+          <label for="a-from">С платежа</label>
+          <select id="a-from"></select>
+        </div>
+        <div class="field" id="to-wrap" hidden>
+          <label for="a-to">По платёж</label>
+          <select id="a-to"></select>
+        </div>
+        <button class="btn" type="button" id="a-add">Добавить</button>
+      </div>
+      <div class="chips" id="chips"></div>
+
+      <p class="mode-q">Что банк делает с графиком после досрочного взноса — выберите вариант, который прописан у вас:</p>
+      <div class="modes" role="radiogroup" aria-label="Пересчёт графика после досрочки">
+        <button class="mode-card" type="button" id="mode-term" role="radio" aria-checked="true">
+          <span class="mc-title"><span class="dot"></span>Оставляет платёж — срок короче</span>
+          <span class="mc-desc">Платёж по телу остаётся прежним, кредит закрывается раньше. Обычно выгоднее.</span>
+          <span class="mc-stats" id="stats-term"></span>
+        </button>
+        <button class="mode-card" type="button" id="mode-pay" role="radio" aria-checked="false">
+          <span class="mc-title"><span class="dot"></span>Оставляет срок — платёж меньше</span>
+          <span class="mc-desc">Кредит идёт до последней даты по договору, а ежемесячный платёж пересчитывается вниз.</span>
+          <span class="mc-stats" id="stats-pay"></span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Остаток задолженности</h2>
+      <span class="eyebrow">по месяцам</span>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-legend">
+        <span><i class="swatch"></i> основной долг с досрочкой</span>
+        <span><i class="swatch dash"></i> базовый график</span>
+        <span><i class="swatch owed"></i> накопленный долг по процентам</span>
+      </div>
+      <canvas id="chart" aria-label="График остатка долга по месяцам"></canvas>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>График платежей</h2>
+      <span class="eyebrow">нажмите год, чтобы раскрыть месяцы</span>
+    </div>
+    <p class="ledger-legend"><b>«Проценты в платеже»</b> — сколько процентов вы реально отдаёте в этом месяце: 10 Br в льготные годы и 1 351,54 Br после них. <b>«Накоплено процентов»</b> — справочная колонка: начислено, но ещё не оплачено. Разовым платежом это гасить не нужно — сумма уже разложена по платежам после пятого года. Целиком она войдёт в платёж только если закрыть кредит досрочно.</p>
+    <div class="ledger-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Период</th>
+            <th>Основной долг</th>
+            <th>Проценты в платеже</th>
+            <th>Платёж</th>
+            <th>Досрочно</th>
+            <th>Остаток долга</th>
+            <th>Накоплено процентов</th>
+          </tr>
+        </thead>
+        <tbody id="ledger"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="notes">
+    <div class="note" id="note-accrual"></div>
+    <div class="note" id="note-owed"></div>
+    <div class="note">
+      <h3>Что даёт досрочка</h3>
+      <p>Любая внесённая сверх графика сумма уменьшает основной долг — значит, дальше начисляется меньше процентов. Чем раньше платёж, тем сильнее эффект.</p>
+      <p>В льготный период размер платежа по телу закреплён договором (0,75 % от суммы кредита), поэтому досрочка там всегда работает на сокращение остатка, а выигрыш проявляется в платеже после пятого года.</p>
+    </div>
+    <div class="note" id="note-grace">
+      <h3>Зачем нужен льготный период</h3>
+    </div>
+    <div class="note" id="note-final"></div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var MON = ["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
+  var fmt2 = new Intl.NumberFormat("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2});
+  var fmt0 = new Intl.NumberFormat("ru-RU",{maximumFractionDigits:0});
+  function money(v){ return fmt2.format(Math.round(v*100)/100); }
+  function round(v){ return Math.round(v*100)/100; }
+
+  var cfg = {amount:238000, rate:14.5, term:300, grace:60, pct:0.75, fix:10, first:"2026-09-26"};
+  var extras = [];
+  var mode = "term";
+  var openYears = {};
+  var seq = 1;
+
+  /* ── Даты ───────────────────────────── */
+  function payDate(i){
+    var p = cfg.first.split("-");
+    var y = +p[0], m = +p[1]-1, d = +p[2];
+    var t = m + (i-1);
+    var yy = y + Math.floor(t/12), mm = ((t%12)+12)%12;
+    var last = new Date(yy, mm+1, 0).getDate();
+    return {y:yy, m:mm, d:Math.min(d,last)};
+  }
+  function dateLabel(dt){ return dt.d + " " + MON[dt.m] + " " + dt.y; }
+  function shortLabel(dt){ return MON[dt.m] + " " + dt.y; }
+
+  /* ── Расчёт графика ─────────────────── */
+  function futureInterest(bal, pay, n, r){
+    return r * (n*bal - pay*n*(n-1)/2);
+  }
+  function baseSecondPrincipal(){
+    var gp = cfg.amount * cfg.pct/100;
+    var bal = cfg.amount;
+    for(var i=0;i<cfg.grace;i++) bal -= Math.min(bal, gp);
+    var n = Math.max(1, cfg.term - cfg.grace);
+    return bal/n;
+  }
+  function extraAt(i){
+    var s = 0;
+    for(var k=0;k<extras.length;k++){
+      var e = extras[k];
+      if(e.kind === "once"){ if(e.from === i) s += e.sum; }
+      else if(i >= e.from && i <= e.to){ s += e.sum; }
+    }
+    return s;
+  }
+
+  function build(useExtras, m){
+    m = m || mode;
+    var r = cfg.rate/100/12;
+    var gp = cfg.amount * cfg.pct/100;
+    var fixedP2 = baseSecondPrincipal();
+    var bal = cfg.amount, owed = 0;
+    var schedP = 0, schedI = 0, need = true;
+    var rows = [], i = 0, guard = cfg.term + 600;
+    var totPaid = 0, totInt = 0, totExtra = 0, totPrinc = 0;
+
+    while(bal > 0.005 && i < guard){
+      i++;
+      var pDue, iDue;
+
+      /* график на новый период считаем до начисления процентов текущего месяца,
+         иначе они попадут в расчёт дважды */
+      if(i > cfg.grace && need){
+        var n;
+        if(m === "term"){
+          n = Math.max(1, Math.ceil(bal/fixedP2 - 1e-9));
+          schedP = Math.min(bal, fixedP2);
+        } else {
+          n = Math.max(1, cfg.term - i + 1);
+          schedP = bal/n;
+        }
+        schedI = (owed + futureInterest(bal, schedP, n, r))/n;
+        if(schedI < 0) schedI = 0;
+        need = false;
+      }
+
+      var acc = bal * r;
+      owed += acc;
+
+      if(i <= cfg.grace){
+        pDue = Math.min(bal, gp);
+        iDue = Math.min(owed, cfg.fix);
+        need = true;
+      } else {
+        pDue = Math.min(bal, schedP);
+        iDue = Math.min(owed, schedI);
+      }
+
+      bal = bal - pDue;
+      owed = owed - iDue;
+
+      var ex = 0;
+      if(useExtras){
+        ex = Math.min(extraAt(i), bal);
+        if(ex > 0){ bal = bal - ex; need = true; }
+      }
+
+      var closing = bal <= 0.005;
+      if(closing){ bal = 0; iDue += owed; owed = 0; }
+
+      var pay = pDue + iDue + ex;
+      totPaid += pay; totInt += iDue; totExtra += ex; totPrinc += pDue;
+
+      rows.push({
+        i:i, date:payDate(i), principal:pDue, interest:iDue, extra:ex,
+        payment:pay, balance:bal, owed:owed, accrued:acc,
+        phase: i <= cfg.grace ? 1 : 2, closing:closing
+      });
+    }
+    return {
+      rows:rows, months:rows.length, totalPaid:totPaid, totalInterest:totInt,
+      totalExtra:totExtra, totalPrincipal:totPrinc,
+      first: rows[0], last: rows[rows.length-1],
+      phase2: rows[cfg.grace] || null,
+      graceOwed: rows[cfg.grace-1] ? rows[cfg.grace-1].owed : 0
+    };
+  }
+
+  /* ── Сводка ─────────────────────────── */
+  function graceSpan(){
+    if(cfg.grace <= 0) return null;
+    return cfg.grace % 12 === 0 ? cfg.grace/12 + " г. / " + cfg.grace + " мес." : cfg.grace + " мес.";
+  }
+  function deltaHTML(cur, base, invert){
+    var d = cur - base;
+    if(Math.abs(d) < 0.5) return '<span class="delta zero">без изменений</span>';
+    var good = invert ? d > 0 : d < 0;
+    var sign = d < 0 ? "−" : "+";
+    return '<span class="delta' + (good ? "" : " up") + '">' + sign + money(Math.abs(d)) + " Br</span>";
+  }
+
+  function renderSummary(cur, base){
+    var hasExtra = cur.totalExtra > 0;
+    var p2 = cur.phase2, bp2 = base.phase2;
+    var savedMonths = base.months - cur.months;
+    var html = "";
+
+    var gl = graceSpan();
+    html += '<div class="kpi is-hero"><span class="k-label">' + (gl ? "Платёж в льготный период" : "Ежемесячный платёж") + '</span>' +
+      '<span class="k-val">' + money(cur.rows[0] ? cur.rows[0].payment - cur.rows[0].extra : 0) + ' <small>Br</small></span>' +
+      '<span class="k-note">' + (gl
+        ? gl + ": " + money(cfg.amount*cfg.pct/100) + ' долг + ' + money(cfg.fix) + ' проценты'
+        : money(cur.rows[0].principal) + ' долг + ' + money(cur.rows[0].interest) + ' проценты') + '</span></div>';
+
+    if(gl){
+      html += '<div class="kpi"><span class="k-label">Платёж после льготного периода</span>' +
+        '<span class="k-val">' + (p2 ? money(p2.payment - p2.extra) : "—") + ' <small>Br</small></span>' +
+        (p2 && bp2 ? deltaHTML(p2.payment - p2.extra, bp2.payment - bp2.extra) : '<span class="k-note">—</span>') + '</div>';
+    }
+
+    html += '<div class="kpi"><span class="k-label">Проценты за весь срок</span>' +
+      '<span class="k-val">' + fmt0.format(cur.totalInterest) + ' <small>Br</small></span>' +
+      (hasExtra ? deltaHTML(cur.totalInterest, base.totalInterest)
+                : '<span class="k-note">' + Math.round(cur.totalInterest/cfg.amount*100) + ' % от тела кредита</span>') + '</div>';
+
+    html += '<div class="kpi"><span class="k-label">Всего выплат</span>' +
+      '<span class="k-val">' + fmt0.format(cur.totalPaid) + ' <small>Br</small></span>' +
+      (hasExtra ? '<span class="k-note">из них досрочно ' + fmt0.format(cur.totalExtra) + ' Br</span>'
+                : '<span class="k-note">тело ' + fmt0.format(cfg.amount) + ' Br + проценты</span>') + '</div>';
+
+    var prev = cur.rows[cur.rows.length-2];
+    var bigTail = prev && cur.last.payment > prev.payment * 1.3;
+    html += '<div class="kpi"><span class="k-label">Последний платёж</span>' +
+      '<span class="k-val" style="font-size:19px">' + dateLabel(cur.last.date) + '</span>' +
+      (savedMonths > 0
+        ? '<span class="delta">− ' + savedMonths + ' мес. (' + (savedMonths/12).toFixed(1).replace('.', ',') + ' года)</span>'
+        : '<span class="k-note">' + cur.months + ' платежей</span>') +
+      (bigTail ? '<span class="k-note">закрывающий платёж ' + fmt0.format(cur.last.payment) + ' Br — в нём весь остаток процентов</span>' : "") +
+      '</div>';
+
+    document.getElementById("summary").innerHTML = html;
+  }
+
+  /* ── Ведомость ──────────────────────── */
+  function renderLedger(cur){
+    var years = [], byYear = {};
+    cur.rows.forEach(function(row){
+      var y = row.date.y;
+      if(!byYear[y]){ byYear[y] = {year:y, rows:[], principal:0, interest:0, payment:0, extra:0}; years.push(byYear[y]); }
+      var g = byYear[y];
+      g.rows.push(row); g.principal += row.principal; g.interest += row.interest;
+      g.payment += row.payment; g.extra += row.extra;
+    });
+
+    var out = [];
+    years.forEach(function(g){
+      var lastRow = g.rows[g.rows.length-1];
+      var open = openYears[g.year] === true;
+      out.push(
+        '<tr class="year-row' + (open ? " open" : "") + '" data-year="' + g.year + '" tabindex="0" role="button" aria-expanded="' + open + '">' +
+        '<td class="c-period"><div class="cell txt"><span class="caret">▶</span><span class="yr">' + g.year + '</span>' +
+          '<span class="cnt">' + g.rows.length + (g.rows.length === 1 ? " платёж" : (g.rows.length < 5 ? " платежа" : " платежей")) + '</span></div></td>' +
+        '<td class="c-princ" data-label="Основной долг"><div class="cell v-princ">' + money(g.principal) + '</div></td>' +
+        '<td class="c-int" data-label="Проценты"><div class="cell v-int">' + money(g.interest) + '</div></td>' +
+        '<td class="c-pay" data-label="Платежи за год"><div class="cell">' + money(g.payment) + '</div></td>' +
+        '<td class="c-extra' + (g.extra > 0 ? "" : " is-empty") + '" data-label="Досрочно"><div class="cell ' + (g.extra > 0 ? "v-extra" : "v-mute") + '">' + (g.extra > 0 ? money(g.extra) : "—") + '</div></td>' +
+        '<td class="c-bal" data-label="Остаток долга"><div class="cell">' + money(lastRow.balance) + '</div></td>' +
+        '<td class="c-owed" data-label="Накоплено %"><div class="cell v-mute">' + money(lastRow.owed) + '</div></td>' +
+        '</tr>'
+      );
+      if(!open) return;
+
+      g.rows.forEach(function(row){
+        out.push(
+          '<tr class="m-row' + (row.closing ? " final-row" : "") + '">' +
+          '<td class="c-period"><div class="cell txt"><span class="idx">' + row.i + '</span>' + dateLabel(row.date) + '</div></td>' +
+          '<td class="c-princ" data-label="Основной долг"><div class="cell v-princ">' + money(row.principal) + '</div></td>' +
+          '<td class="c-int" data-label="Проценты"><div class="cell v-int">' + money(row.interest) + '</div></td>' +
+          '<td class="c-pay" data-label="Платёж"><div class="cell">' + money(row.payment) + '</div></td>' +
+          '<td class="c-extra' + (row.extra > 0 ? "" : " is-empty") + '" data-label="Досрочно"><div class="cell ' + (row.extra > 0 ? "v-extra" : "v-mute") + '">' + (row.extra > 0 ? money(row.extra) : "—") + '</div></td>' +
+          '<td class="c-bal" data-label="Остаток долга"><div class="cell">' + money(row.balance) + '</div></td>' +
+          '<td class="c-owed" data-label="Накоплено %"><div class="cell v-mute">' + money(row.owed) + '</div></td>' +
+          '</tr>'
+        );
+        if(row.i === cfg.grace && !row.closing){
+          var nxt = cur.rows[cfg.grace];
+          out.push(
+            '<tr class="phase-row"><td colspan="7"><div class="phase-note">' +
+            '<span class="pn-title">Льготный период закончился.</span>' +
+            '<span>Остаток тела <b>' + money(row.balance) + '</b> Br</span>' +
+            '<span>накопленный долг по процентам <b>' + money(row.owed) + '</b> Br</span>' +
+            (nxt ? '<span>дальше платёж <b>' + money(nxt.payment - nxt.extra) + '</b> Br в месяц</span>' : "") +
+            '</div></td></tr>'
+          );
+        }
+      });
+    });
+    document.getElementById("ledger").innerHTML = out.join("");
+  }
+
+  /* ── График ─────────────────────────── */
+  function drawChart(cur, base){
+    var cv = document.getElementById("chart");
+    var narrow = window.innerWidth < 720;
+    var w = Math.max(260, Math.floor(cv.getBoundingClientRect().width) || 320);
+    var h = narrow ? 180 : 230;
+    var dpr = window.devicePixelRatio || 1;
+    cv.width = w*dpr; cv.height = h*dpr;
+    cv.style.height = h + "px";
+    var g = cv.getContext("2d");
+    g.setTransform(dpr,0,0,dpr,0,0);
+    g.clearRect(0,0,w,h);
+
+    var cs = getComputedStyle(document.documentElement);
+    var cAcc = cs.getPropertyValue("--accent").trim();
+    var cInt = cs.getPropertyValue("--interest").trim();
+    var cLine = cs.getPropertyValue("--hairline").trim();
+    var cStrong = cs.getPropertyValue("--hairline-strong").trim();
+    var cMuted = cs.getPropertyValue("--faint").trim();
+
+    var n = Math.max(base.months, cur.months);
+    var maxV = cfg.amount;
+    base.rows.concat(cur.rows).forEach(function(r){ if(r.owed > maxV) maxV = r.owed; });
+    maxV = maxV * 1.06;
+
+    var padL = narrow ? 42 : 54, padR = 8, padT = 10, padB = 22;
+    var iw = w - padL - padR, ih = h - padT - padB;
+    var X = function(i){ return padL + iw * (i/n); };
+    var Y = function(v){ return padT + ih * (1 - v/maxV); };
+
+    g.font = '10px "IBM Plex Mono", monospace';
+    g.textBaseline = "middle";
+    for(var t=0; t<=4; t++){
+      var v = maxV*t/4, y = Y(v);
+      g.strokeStyle = cLine; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(padL, Math.round(y)+0.5); g.lineTo(w-padR, Math.round(y)+0.5); g.stroke();
+      g.fillStyle = cMuted; g.textAlign = "right";
+      g.fillText(v < 1 ? "0" : fmt0.format(Math.round(v/1000)) + "k", padL-8, y);
+    }
+    g.textAlign = "center"; g.textBaseline = "top";
+    var stepY = n > 180 ? (narrow ? 120 : 60) : (narrow ? 48 : 24);
+    for(var i=0; i<=n; i+=stepY){
+      var d = payDate(Math.max(1,i));
+      g.fillStyle = cMuted;
+      g.fillText(d.y, X(i), h - padB + 7);
+    }
+
+    function path(rows, close){
+      g.beginPath();
+      g.moveTo(X(0), Y(cfg.amount));
+      rows.forEach(function(r){ g.lineTo(X(r.i), Y(r.balance)); });
+      if(close){ g.lineTo(X(rows[rows.length-1].i), Y(0)); g.lineTo(X(0), Y(0)); g.closePath(); }
+    }
+
+    if(cur.totalExtra > 0){
+      g.save(); g.setLineDash([4,3]); g.strokeStyle = cStrong; g.lineWidth = 1.5;
+      path(base.rows, false); g.stroke(); g.restore();
+    }
+
+    path(cur.rows, true);
+    g.fillStyle = cAcc; g.globalAlpha = 0.09; g.fill(); g.globalAlpha = 1;
+    path(cur.rows, false);
+    g.strokeStyle = cAcc; g.lineWidth = 2; g.lineJoin = "round"; g.stroke();
+
+    g.beginPath(); g.moveTo(X(0), Y(0));
+    cur.rows.forEach(function(r){ g.lineTo(X(r.i), Y(r.owed)); });
+    g.strokeStyle = cInt; g.lineWidth = 1.5; g.stroke();
+
+    var lr = cur.rows[cur.rows.length-1];
+    g.beginPath(); g.arc(X(lr.i), Y(0), 3.2, 0, Math.PI*2);
+    g.fillStyle = cAcc; g.fill();
+  }
+
+  /* ── Досрочки: список и селекты ─────── */
+  function fillSelects(){
+    var from = document.getElementById("a-from"), to = document.getElementById("a-to");
+    var prevFrom = from.value, prevTo = to.value;
+    var opts = [];
+    for(var i=1; i<=cfg.term; i++){
+      opts.push('<option value="' + i + '">' + i + " · " + shortLabel(payDate(i)) + "</option>");
+    }
+    from.innerHTML = opts.join("");
+    to.innerHTML = opts.join("");
+    from.value = prevFrom && +prevFrom <= cfg.term ? prevFrom : Math.min(cfg.term, 1);
+    to.value = prevTo && +prevTo <= cfg.term ? prevTo : cfg.term;
+  }
+  function renderChips(){
+    var box = document.getElementById("chips");
+    if(!extras.length){ box.innerHTML = '<span class="empty">Досрочных платежей нет — показан график по договору.</span>'; return; }
+    box.innerHTML = extras.map(function(e){
+      var when = e.kind === "once"
+        ? "разово · " + shortLabel(payDate(e.from))
+        : "ежемесячно · " + shortLabel(payDate(e.from)) + " — " + shortLabel(payDate(e.to));
+      return '<span class="chip"><span class="c-sum">+' + fmt0.format(e.sum) + ' Br</span>' +
+             '<span class="c-when">' + when + '</span>' +
+             '<button type="button" data-id="' + e.id + '" aria-label="Удалить досрочный платёж">×</button></span>';
+    }).join("") + '<button class="btn ghost" type="button" id="clear-all">Очистить всё</button>';
+  }
+
+  /* ── Карточки режима ────────────────── */
+  function renderModes(byTerm, byPay, base){
+    var has = byTerm.totalExtra > 0;
+    var gl = graceSpan();
+
+    function fill(id, s){
+      var p2 = s.phase2 || s.rows[0];
+      var saved = base.totalInterest - s.totalInterest;
+      var out = "";
+      out += '<i><span>Закрытие кредита</span><b>' + dateLabel(s.last.date) +
+             (base.months - s.months > 0 ? ' <span style="color:var(--positive)">−' + (base.months - s.months) + ' мес.</span>' : "") + '</b></i>';
+      out += '<i><span>' + (gl ? "Платёж после льготных" : "Ежемесячный платёж") + '</span><b>' +
+             (p2 ? money(p2.payment - p2.extra) : "—") + ' Br</b></i>';
+      out += has
+        ? '<i><span>Экономия на процентах</span><b class="win">' + fmt0.format(saved) + ' Br</b></i>'
+        : '<i><span>Проценты за весь срок</span><b>' + fmt0.format(s.totalInterest) + ' Br</b></i>';
+      document.getElementById(id).innerHTML = out;
+    }
+    fill("stats-term", byTerm);
+    fill("stats-pay", byPay);
+  }
+
+  /* ── Что даёт льготный период ───────── */
+  function buildWithGrace(g){
+    var keep = cfg.grace;
+    cfg.grace = g;
+    var s = build(false, "term");
+    cfg.grace = keep;
+    return s;
+  }
+  function renderGraceNote(base){
+    var evenP = cfg.amount/cfg.term;
+    var graceP = cfg.amount * cfg.pct/100;
+    var html = "<h3>Зачем нужен льготный период</h3>";
+    html += "<p>В эти годы вы гасите тело кредита <b>быстрее обычного</b>: " + cfg.pct.toString().replace(".", ",") +
+      " % от суммы — это " + money(graceP) + " Br в месяц против " + money(evenP) +
+      " Br при равномерном графике. Отсрочка процентов — плата за это ускорение.</p>";
+    if(cfg.grace > 0){
+      var off = buildWithGrace(0);
+      html += "<p>Поэтому убирать его невыгодно. Поставьте <code>0</code> в поле «Льготный период» — проценты вырастут с " +
+        fmt0.format(base.totalInterest) + " до " + fmt0.format(off.totalInterest) + " Br, а платёж станет " +
+        money(off.rows[0].payment) + " Br вместо " + money(base.rows[0].payment) + " Br. Чем период длиннее, тем кредит дешевле.</p>";
+    } else {
+      var on = buildWithGrace(60);
+      html += "<p>Сейчас период выключен. Верните <code>60</code> в поле «Льготный период» — проценты упадут с " +
+        fmt0.format(base.totalInterest) + " до " + fmt0.format(on.totalInterest) + " Br, а платёж первых пяти лет — с " +
+        money(base.rows[0].payment) + " до " + money(on.rows[0].payment) + " Br.</p>";
+    }
+    document.getElementById("note-grace").innerHTML = html;
+  }
+
+  function renderNotes(base){
+    var rateTxt = String(cfg.rate).replace(".", ",");
+    var first = base.rows[0];
+    var atGrace = cfg.grace > 0 ? base.rows[cfg.grace-1] : null;
+    var afterGrace = base.rows[cfg.grace] || null;
+    var rest = Math.max(0, cfg.term - cfg.grace);
+
+    var a = "<h3>Как считаются проценты</h3>";
+    a += "<p>Начисление идёт на остаток основного долга по ставке <code>" + rateTxt +
+      " % / 12</code> в месяц — договор задаёт год в 360 дней, месяц в 30 дней, поэтому месячная ставка ровно двенадцатая часть годовой.</p>";
+    if(cfg.grace > 0){
+      a += "<p>В льготные месяцы вы платите " + money(cfg.fix) + " Br процентов, а начисляется " +
+        money(first.accrued) + " Br в первый месяц. Разница копится и не прощается.</p>";
+    } else {
+      a += "<p>В первый месяц начисляется " + money(first.accrued) +
+        " Br. Дальше сумма снижается вместе с остатком долга.</p>";
+    }
+    document.getElementById("note-accrual").innerHTML = a;
+
+    var b = "<h3>Накопленные проценты</h3>";
+    if(atGrace && afterGrace){
+      b += "<p>К концу льготного периода накапливается " + fmt0.format(atGrace.owed) +
+        " Br неуплаченных процентов. Именно они по п. 1.6.3.2 делятся на оставшиеся " + rest +
+        " месяцев и дают " + money(afterGrace.interest) + " Br в платеже.</p>";
+    } else {
+      b += "<p>Без льготного периода проценты платятся сразу и большой хвост не накапливается.</p>";
+    }
+    b += "<p>Последняя колонка графика показывает этот хвост: при полном досрочном погашении его придётся закрыть вместе с остатком тела.</p>";
+    document.getElementById("note-owed").innerHTML = b;
+
+    var c = "<h3>Закрывающий платёж</h3>";
+    c += "<p>Тело кредита можно погасить досрочно, а уже начисленные проценты — нет. Поэтому в месяц, когда остаток обнуляется, в платёж входит весь неоплаченный процентный долг: такая строка подсвечена в графике.</p>";
+    var probe = base.rows[23];
+    if(probe && probe.owed > 1){
+      c += "<p>Закрыть всё в первые годы дороже, чем кажется: на 24-м платеже к остатку тела " +
+        fmt0.format(probe.balance) + " Br добавится " + fmt0.format(probe.owed) + " Br отложенных процентов.</p>";
+    }
+    document.getElementById("note-final").innerHTML = c;
+  }
+
+  /* ── Сборка ─────────────────────────── */
+  var lastCur = null, lastBase = null;
+  function refresh(){
+    document.getElementById("stamp-rate").textContent = String(cfg.rate).replace(".", ",") + " %";
+    document.getElementById("stamp-term").textContent = cfg.term + " платежей";
+
+    var base = build(false, "term");
+    var byTerm = build(true, "term");
+    var byPay = build(true, "pay");
+    var cur = mode === "term" ? byTerm : byPay;
+    renderModes(byTerm, byPay, base);
+    renderGraceNote(base);
+    renderNotes(base);
+    lastCur = cur; lastBase = base;
+    renderSummary(cur, base);
+    renderLedger(cur);
+    drawChart(cur, base);
+    renderChips();
+    save();
+  }
+
+  function save(){
+    try{
+      localStorage.setItem("credit-ledger", JSON.stringify({cfg:cfg, extras:extras, mode:mode}));
+    }catch(err){}
+  }
+  function load(){
+    try{
+      var raw = localStorage.getItem("credit-ledger");
+      if(!raw) return;
+      var d = JSON.parse(raw);
+      if(d && d.cfg){ for(var k in cfg){ if(d.cfg[k] !== undefined) cfg[k] = d.cfg[k]; } }
+      if(d && Array.isArray(d.extras)){
+        extras = d.extras;
+        extras.forEach(function(e){ if(e.id >= seq) seq = e.id + 1; });
+      }
+      if(d && d.mode) mode = d.mode;
+    }catch(err){}
+  }
+
+  /* ── События ────────────────────────── */
+  var fieldMap = {"f-amount":"amount","f-rate":"rate","f-term":"term","f-grace":"grace","f-pct":"pct","f-fix":"fix","f-date":"first"};
+  Object.keys(fieldMap).forEach(function(id){
+    var el = document.getElementById(id);
+    el.addEventListener("input", function(){
+      var key = fieldMap[id];
+      if(key === "first"){
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(el.value)) return;
+        cfg.first = el.value;
+      } else {
+        var v = parseFloat(el.value);
+        if(isNaN(v) || v < 0) return;
+        if(key === "term" && v < 2) return;
+        if(key === "amount" && v <= 0) return;
+        cfg[key] = v;
+      }
+      if(cfg.grace > cfg.term - 1){
+        cfg.grace = cfg.term - 1;
+        document.getElementById("f-grace").value = cfg.grace;
+      }
+      fillSelects();
+      extras = extras.filter(function(e){ return e.from <= cfg.term; });
+      extras.forEach(function(e){ if(e.to > cfg.term) e.to = cfg.term; });
+      refresh();
+    });
+  });
+
+  document.getElementById("a-kind").addEventListener("change", function(){
+    document.getElementById("to-wrap").hidden = this.value !== "monthly";
+  });
+
+  document.getElementById("a-add").addEventListener("click", function(){
+    var kind = document.getElementById("a-kind").value;
+    var sum = parseFloat(document.getElementById("a-sum").value);
+    var from = parseInt(document.getElementById("a-from").value, 10);
+    var to = parseInt(document.getElementById("a-to").value, 10);
+    if(isNaN(sum) || sum <= 0) return;
+    if(kind === "monthly" && to < from) to = cfg.term;
+    extras.push({id:seq++, kind:kind, sum:sum, from:from, to:to});
+    refresh();
+  });
+
+  document.getElementById("chips").addEventListener("click", function(ev){
+    var btn = ev.target.closest("button");
+    if(!btn) return;
+    if(btn.id === "clear-all"){ extras = []; refresh(); return; }
+    var id = +btn.getAttribute("data-id");
+    extras = extras.filter(function(e){ return e.id !== id; });
+    refresh();
+  });
+
+  function setMode(m){
+    mode = m;
+    document.getElementById("mode-term").setAttribute("aria-checked", String(m === "term"));
+    document.getElementById("mode-pay").setAttribute("aria-checked", String(m === "pay"));
+    refresh();
+  }
+  document.getElementById("mode-term").addEventListener("click", function(){ setMode("term"); });
+  document.getElementById("mode-pay").addEventListener("click", function(){ setMode("pay"); });
+
+  function toggleYear(tr){
+    var y = tr.getAttribute("data-year");
+    openYears[y] = !openYears[y];
+    renderLedger(lastCur);
+  }
+  document.getElementById("ledger").addEventListener("click", function(ev){
+    var tr = ev.target.closest("tr.year-row");
+    if(tr) toggleYear(tr);
+  });
+  document.getElementById("ledger").addEventListener("keydown", function(ev){
+    if(ev.key !== "Enter" && ev.key !== " ") return;
+    var tr = ev.target.closest("tr.year-row");
+    if(tr){ ev.preventDefault(); toggleYear(tr); }
+  });
+
+  var resizeTimer = null;
+  window.addEventListener("resize", function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function(){ if(lastCur) drawChart(lastCur, lastBase); }, 120);
+  });
+  if(window.matchMedia){
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if(mq.addEventListener) mq.addEventListener("change", function(){ if(lastCur) drawChart(lastCur, lastBase); });
+  }
+
+  /* ── Старт ──────────────────────────── */
+  load();
+  document.getElementById("f-amount").value = cfg.amount;
+  document.getElementById("f-rate").value = cfg.rate;
+  document.getElementById("f-term").value = cfg.term;
+  document.getElementById("f-grace").value = cfg.grace;
+  document.getElementById("f-pct").value = cfg.pct;
+  document.getElementById("f-fix").value = cfg.fix;
+  document.getElementById("f-date").value = cfg.first;
+  document.getElementById("mode-term").setAttribute("aria-checked", String(mode === "term"));
+  document.getElementById("mode-pay").setAttribute("aria-checked", String(mode === "pay"));
+  fillSelects();
+  openYears[payDate(1).y] = true;
+  refresh();
+})();
+</script>
+
+</body>
+</html>
