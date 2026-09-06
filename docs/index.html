@@ -193,6 +193,8 @@ tr.final-row .cell{font-weight:600}
 .note p:last-child{margin-bottom:0}
 .note code{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px; color:var(--accent);
   background:var(--accent-soft); padding:1px 5px; border-radius:2px}
+.disclaimer{margin:0; padding-top:18px; border-top:1px solid var(--hairline);
+  font-size:11.5px; line-height:1.5; color:var(--faint); max-width:88ch}
 /* ── Мобильная вёрстка ─────────────────── */
 @media (max-width:720px){
   .wrap{padding:22px 12px 64px; gap:16px}
@@ -419,6 +421,8 @@ tr.final-row .cell{font-weight:600}
     </div>
     <div class="note" id="note-final"></div>
   </section>
+
+  <p class="disclaimer">Расчёт справочный. Он воспроизводит формулы договора, но не является офертой, официальным графиком платежей или консультацией. Точные суммы к уплате подтверждает кредитодатель.</p>
 </div>
 
 <script>
@@ -869,6 +873,26 @@ tr.final-row .cell{font-weight:600}
       localStorage.setItem("credit-ledger", JSON.stringify({cfg:cfg, extras:extras, mode:mode}));
     }catch(err){}
   }
+  /* Параметры в ссылке: ?amount=100000&rate=14.5&term=300&grace=60&pct=0.75&fix=10&first=2027-01-26
+     Позволяет открыть калькулятор сразу с нужными условиями — например, дать клиенту
+     ссылку на его продукт. Значения из ссылки имеют приоритет над сохранёнными. */
+  function applyQuery(){
+    try{
+      var q = new URLSearchParams(location.search);
+      ["amount","rate","term","grace","pct","fix"].forEach(function(k){
+        if(!q.has(k)) return;
+        var v = parseFloat(q.get(k));
+        if(!isNaN(v) && v >= 0) cfg[k] = v;
+      });
+      var d = q.get("first");
+      if(d && /^\d{4}-\d{2}-\d{2}$/.test(d)) cfg.first = d;
+      var m = q.get("mode");
+      if(m === "pay" || m === "term") mode = m;
+      if(cfg.term < 2) cfg.term = 2;
+      if(cfg.grace > cfg.term - 1) cfg.grace = cfg.term - 1;
+    }catch(err){}
+  }
+
   function load(){
     try{
       var raw = localStorage.getItem("credit-ledger");
@@ -970,6 +994,7 @@ tr.final-row .cell{font-weight:600}
 
   /* ── Старт ──────────────────────────── */
   load();
+  applyQuery();
   document.getElementById("f-amount").value = cfg.amount;
   document.getElementById("f-rate").value = cfg.rate;
   document.getElementById("f-term").value = cfg.term;

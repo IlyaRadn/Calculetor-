@@ -1,7 +1,14 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%8F%A6%3C%2Ftext%3E%3C%2Fsvg%3E">
 <title>Кредитная ведомость</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap">
+<style>body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
 <style>
 :root{
   --ground:#EDEFF3; --surface:#FCFCFE; --surface-2:#F4F6FA; --sunken:#E4E8F0;
@@ -273,7 +280,7 @@ tr.final-row .cell{font-weight:600}
     <div class="terms">
       <div class="field">
         <label for="f-amount">Сумма кредита</label>
-        <input id="f-amount" type="number" step="100" min="1" value="238000">
+        <input id="f-amount" type="number" step="100" min="1" value="100000">
         <span class="hint">Br, пункт 1.1</span>
       </div>
       <div class="field">
@@ -303,7 +310,7 @@ tr.final-row .cell{font-weight:600}
       </div>
       <div class="field">
         <label for="f-date">Первый платёж</label>
-        <input id="f-date" type="date" value="2026-09-26">
+        <input id="f-date" type="date">
         <span class="hint">расчётная дата</span>
       </div>
     </div>
@@ -423,7 +430,7 @@ tr.final-row .cell{font-weight:600}
   function money(v){ return fmt2.format(Math.round(v*100)/100); }
   function round(v){ return Math.round(v*100)/100; }
 
-  var cfg = {amount:238000, rate:14.5, term:300, grace:60, pct:0.75, fix:10, first:"2026-09-26"};
+  var cfg = {amount:100000, rate:14.5, term:300, grace:60, pct:0.75, fix:10, first:(function(){var d=new Date();d.setMonth(d.getMonth()+1);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-26";})()};
   var extras = [];
   var mode = "term";
   var openYears = {};
@@ -998,3 +1005,6 @@ tr.final-row .cell{font-weight:600}
   refresh();
 })();
 </script>
+
+</body>
+</html>
