@@ -172,6 +172,49 @@ h1,h2,h3{margin:0; text-wrap:balance}
 .cal-foot button:hover{background:rgba(147,64,222,.3); border-color:rgba(204,162,242,.55); color:#fff}
 .cal-foot button:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
 
+/* ── Свой выпадающий список ───────────── */
+.sel{position:relative; display:block; width:100%}
+.sel > select{position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; margin:-1px}
+.sel-btn{
+  font-family:inherit; font-size:15px; font-weight:500; text-align:left; cursor:pointer; width:100%;
+  background-color:rgba(255,255,255,.05); color:var(--ink); border:1.5px solid rgba(255,255,255,.09);
+  border-radius:var(--r-field); padding:11px 38px 11px 14px; position:relative;
+  transition:border-color .18s, box-shadow .18s, background-color .18s;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.sel-btn::after{
+  content:""; position:absolute; right:15px; top:50%; width:9px; height:9px; margin-top:-5px;
+  border-right:1.7px solid var(--muted); border-bottom:1.7px solid var(--muted);
+  transform:rotate(45deg); transform-origin:70% 70%; transition:transform .2s, border-color .18s;
+}
+.sel-btn:hover{border-color:rgba(255,255,255,.2)}
+.sel-btn[aria-expanded="true"]{
+  border-color:rgba(204,162,242,.65); background-color:rgba(147,64,222,.1);
+  box-shadow:0 0 24px -6px rgba(147,64,222,.6);
+}
+.sel-btn[aria-expanded="true"]::after{transform:rotate(-135deg); border-color:var(--violet-lt)}
+.sel-btn:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+.sel-list{
+  position:absolute; top:calc(100% + 8px); left:0; right:0; z-index:40; max-height:264px; overflow-y:auto;
+  min-width:196px; max-width:calc(100vw - 24px);
+  padding:6px; background:#151722; border:1px solid rgba(204,162,242,.28); border-radius:16px;
+  box-shadow:0 24px 60px -20px rgba(0,0,0,.9), 0 0 44px -18px rgba(147,64,222,.85);
+  animation:riseIn .16s ease-out; scrollbar-width:thin; scrollbar-color:rgba(204,162,242,.45) transparent;
+}
+.sel-list::-webkit-scrollbar{width:8px}
+.sel-list::-webkit-scrollbar-thumb{background:rgba(204,162,242,.4); border-radius:100px}
+.sel-list::-webkit-scrollbar-track{background:transparent}
+.sel-opt{
+  display:block; width:100%; text-align:left; font:inherit; font-size:13.5px; cursor:pointer;
+  padding:9px 12px; border:0; border-radius:10px; background:transparent; color:var(--ink);
+  transition:background .13s, color .13s;
+}
+.sel-opt:hover, .sel-opt.cursor{background:rgba(255,255,255,.08)}
+.sel-opt[aria-selected="true"]{
+  background:linear-gradient(120deg,rgba(147,64,222,.85),rgba(91,120,251,.85)); color:#fff; font-weight:600;
+}
+.sel-opt:focus-visible{outline:2px solid var(--focus); outline-offset:-2px}
+
 .num-wrap{position:relative; display:block; width:100%}
 .stepper{position:absolute; right:7px; top:50%; transform:translateY(-50%); display:flex; gap:4px}
 .stepper button{
@@ -322,6 +365,23 @@ tr.year-row.open .caret{transform:rotate(90deg)}
 tr.year-row .yr{font-size:15px; letter-spacing:-.02em}
 tr.year-row .cnt{font-weight:400; font-size:12px; color:var(--faint); margin-left:10px}
 tr.year-row:focus-visible td{outline:2px solid var(--focus); outline-offset:-2px}
+/* прошлое приглушено, ближайший платёж подсвечен */
+tr.m-row.past .cell, tr.year-row.past .cell{opacity:.4; transition:opacity .15s}
+tr.m-row.past:hover .cell, tr.year-row.past:hover .cell{opacity:.75}
+tr.year-row.now td{background:rgba(147,64,222,.16); box-shadow:inset 0 0 0 1px rgba(204,162,242,.25)}
+tr.m-row.next td{background:rgba(147,64,222,.13)}
+tr.m-row.next td:first-child{border-radius:var(--r-field) 0 0 var(--r-field); box-shadow:inset 3px 0 0 var(--violet-lt)}
+tr.m-row.next td:last-child{border-radius:0 var(--r-field) var(--r-field) 0}
+tr.m-row.next .cell{font-weight:600}
+.badge-now{
+  display:inline-block; margin-left:10px; padding:3px 10px; border-radius:100px; vertical-align:middle;
+  font-size:10.5px; font-weight:600; letter-spacing:.03em; color:#fff;
+  background:linear-gradient(120deg,var(--violet),var(--indigo));
+  box-shadow:0 0 16px -4px rgba(147,64,222,.95);
+}
+.badge-done{
+  display:inline-block; margin-left:10px; font-size:11px; color:var(--faint); vertical-align:middle;
+}
 tr.m-row .cell{padding:9px 14px; font-size:13px}
 tr.m-row:hover td{background:rgba(255,255,255,.04)}
 tr.m-row .idx{color:var(--faint); font-size:12px; margin-right:10px}
@@ -554,7 +614,7 @@ tr.final-row .cell{font-weight:600}
   <section class="card">
     <div class="card-head">
       <h2>Остаток задолженности</h2>
-      <span class="eyebrow">по месяцам</span>
+      <span class="eyebrow">по годам</span>
     </div>
     <div class="chart-wrap">
       <div class="chart-legend">
@@ -633,6 +693,11 @@ tr.final-row .cell{font-weight:600}
     var last = new Date(yy, mm+1, 0).getDate();
     return {y:yy, m:mm, d:Math.min(d,last)};
   }
+  function startOfToday(){
+    var n = new Date();
+    return new Date(n.getFullYear(), n.getMonth(), n.getDate()).getTime();
+  }
+  function rowTs(row){ return new Date(row.date.y, row.date.m, row.date.d).getTime(); }
   function dateLabel(dt){ return dt.d + " " + MON[dt.m] + " " + dt.y; }
   function shortLabel(dt){ return MON[dt.m] + " " + dt.y; }
 
@@ -800,6 +865,11 @@ tr.final-row .cell{font-weight:600}
 
   /* ── Ведомость ──────────────────────── */
   function renderLedger(cur){
+    var nowTs = startOfToday();
+    var nextIdx = -1;
+    for(var k = 0; k < cur.rows.length; k++){
+      if(rowTs(cur.rows[k]) >= nowTs){ nextIdx = k; break; }
+    }
     var years = [], byYear = {};
     cur.rows.forEach(function(row){
       var y = row.date.y;
@@ -813,10 +883,15 @@ tr.final-row .cell{font-weight:600}
     years.forEach(function(g){
       var lastRow = g.rows[g.rows.length-1];
       var open = openYears[g.year] === true;
+      var yearDone = rowTs(lastRow) < nowTs;
+      var yearNow = nextIdx >= 0 && cur.rows[nextIdx].date.y === g.year;
       out.push(
-        '<tr class="year-row' + (open ? " open" : "") + '" data-year="' + g.year + '" tabindex="0" role="button" aria-expanded="' + open + '">' +
+        '<tr class="year-row' + (open ? " open" : "") + (yearDone ? " past" : "") + (yearNow ? " now" : "") +
+          '" data-year="' + g.year + '" tabindex="0" role="button" aria-expanded="' + open + '">' +
         '<td class="c-period"><div class="cell txt"><span class="caret">▶</span><span class="yr">' + g.year + '</span>' +
-          '<span class="cnt">' + g.rows.length + (g.rows.length === 1 ? " платёж" : (g.rows.length < 5 ? " платежа" : " платежей")) + '</span></div></td>' +
+          '<span class="cnt">' + g.rows.length + (g.rows.length === 1 ? " платёж" : (g.rows.length < 5 ? " платежа" : " платежей")) + '</span>' +
+          (yearDone ? '<span class="badge-done">выплачен</span>' : "") +
+          (yearNow ? '<span class="badge-now">идёт сейчас</span>' : "") + '</div></td>' +
         '<td class="c-princ" data-label="Основной долг"><div class="cell v-princ">' + money(g.principal) + '</div></td>' +
         '<td class="c-int" data-label="Проценты"><div class="cell v-int">' + money(g.interest) + '</div></td>' +
         '<td class="c-pay" data-label="Платежи за год"><div class="cell">' + money(g.payment) + '</div></td>' +
@@ -828,9 +903,12 @@ tr.final-row .cell{font-weight:600}
       if(!open) return;
 
       g.rows.forEach(function(row){
+        var isPast = rowTs(row) < nowTs;
+        var isNext = nextIdx >= 0 && cur.rows[nextIdx].i === row.i;
         out.push(
-          '<tr class="m-row' + (row.closing ? " final-row" : "") + '">' +
-          '<td class="c-period"><div class="cell txt"><span class="idx">' + row.i + '</span>' + dateLabel(row.date) + '</div></td>' +
+          '<tr class="m-row' + (row.closing ? " final-row" : "") + (isPast ? " past" : "") + (isNext ? " next" : "") + '">' +
+          '<td class="c-period"><div class="cell txt"><span class="idx">' + row.i + '</span>' + dateLabel(row.date) +
+            (isNext ? '<span class="badge-now">ближайший</span>' : "") + '</div></td>' +
           '<td class="c-princ" data-label="Основной долг"><div class="cell v-princ">' + money(row.principal) + '</div></td>' +
           '<td class="c-int" data-label="Проценты"><div class="cell v-int">' + money(row.interest) + '</div></td>' +
           '<td class="c-pay" data-label="Платёж"><div class="cell">' + money(row.payment) + '</div></td>' +
@@ -880,7 +958,7 @@ tr.final-row .cell{font-weight:600}
     base.rows.concat(cur.rows).forEach(function(r){ if(r.owed > maxV) maxV = r.owed; });
     maxV = maxV * 1.06;
 
-    var padL = narrow ? 42 : 54, padR = 8, padT = 10, padB = 22;
+    var padL = narrow ? 42 : 54, padR = narrow ? 20 : 28, padT = 10, padB = 22;
     var iw = w - padL - padR, ih = h - padT - padB;
     var X = function(i){ return padL + iw * (i/n); };
     var Y = function(v){ return padT + ih * (1 - v/maxV); };
@@ -894,13 +972,16 @@ tr.final-row .cell{font-weight:600}
       g.fillStyle = cMuted; g.textAlign = "right";
       g.fillText(v < 1 ? "0" : fmt0.format(Math.round(v/1000)) + "k", padL-8, y);
     }
-    g.textAlign = "center"; g.textBaseline = "top";
+    g.textBaseline = "top";
+    g.fillStyle = cMuted;
     var stepY = n > 180 ? (narrow ? 120 : 60) : (narrow ? 48 : 24);
     for(var i=0; i<=n; i+=stepY){
-      var d = payDate(Math.max(1,i));
-      g.fillStyle = cMuted;
-      g.fillText(d.y, X(i), h - padB + 7);
+      if(i > 0 && n - i < stepY*0.6) continue;   // не ставим метку впритык к последней
+      g.textAlign = i === 0 ? "left" : "center";
+      g.fillText(payDate(Math.max(1,i)).y, X(i), h - padB + 7);
     }
+    g.textAlign = "right";
+    g.fillText(payDate(n).y, X(n), h - padB + 7);
 
     function path(rows, close){
       g.beginPath();
@@ -958,6 +1039,7 @@ tr.final-row .cell{font-weight:600}
     to.innerHTML = opts.join("");
     from.value = prevFrom && +prevFrom <= cfg.term ? prevFrom : Math.min(cfg.term, 1);
     to.value = prevTo && +prevTo <= cfg.term ? prevTo : cfg.term;
+    enhanceAllSelects();
   }
   /* Свои кнопки вместо браузерных спиннеров. Шаг и границы берутся из самого
      поля через stepUp/stepDown, поэтому каждое считает по своим правилам. */
@@ -990,6 +1072,118 @@ tr.final-row .cell{font-weight:600}
       })(list[i]);
     }
   }
+
+  /* ── Свой выпадающий список ───────────────────────────────────────────
+     Нативный список опций рисует система, и на тёмной сцене он выглядит
+     чужеродно. Сам <select> остаётся в разметке и хранит значение — вся
+     остальная логика продолжает читать его .value как раньше. */
+  var openList = null;
+
+  function enhanceSelect(sel){
+    var wrap = document.createElement("div");
+    wrap.className = "sel";
+    sel.parentNode.insertBefore(wrap, sel);
+    wrap.appendChild(sel);
+
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "sel-btn";
+    btn.setAttribute("aria-haspopup", "listbox");
+    btn.setAttribute("aria-expanded", "false");
+    if(sel.id) btn.setAttribute("aria-labelledby", sel.id + "-label");
+    wrap.appendChild(btn);
+
+    var list = document.createElement("div");
+    list.className = "sel-list";
+    list.setAttribute("role", "listbox");
+    list.hidden = true;
+    wrap.appendChild(list);
+
+    var lab = sel.id ? document.querySelector('label[for="' + sel.id + '"]') : null;
+    if(lab){
+      lab.id = sel.id + "-label";
+      lab.addEventListener("click", function(ev){ ev.preventDefault(); btn.click(); });
+    }
+
+    sel.__ui = {btn:btn, list:list};
+    syncSelect(sel);
+
+    btn.addEventListener("click", function(){
+      if(list.hidden) openSelect(sel); else closeSelect(sel);
+    });
+    list.addEventListener("click", function(ev){
+      var o = ev.target.closest(".sel-opt");
+      if(!o) return;
+      sel.value = o.getAttribute("data-v");
+      syncSelect(sel);
+      closeSelect(sel);
+      btn.focus();
+      sel.dispatchEvent(new Event("change", {bubbles:true}));
+    });
+    btn.addEventListener("keydown", function(ev){
+      if(ev.key === "ArrowDown" || ev.key === "ArrowUp" || ev.key === "Enter" || ev.key === " "){
+        if(list.hidden){ ev.preventDefault(); openSelect(sel); }
+      }
+    });
+  }
+
+  function syncSelect(sel){
+    var ui = sel.__ui;
+    if(!ui) return;
+    var opt = sel.options[sel.selectedIndex];
+    ui.btn.textContent = opt ? opt.textContent : "";
+  }
+
+  function buildOptions(sel){
+    var ui = sel.__ui, html = "";
+    for(var i = 0; i < sel.options.length; i++){
+      var o = sel.options[i];
+      html += '<button type="button" class="sel-opt" role="option" data-v="' + o.value +
+              '" aria-selected="' + (i === sel.selectedIndex) + '">' + o.textContent + "</button>";
+    }
+    ui.list.innerHTML = html;
+  }
+
+  function openSelect(sel){
+    if(openList && openList !== sel) closeSelect(openList);
+    var ui = sel.__ui;
+    buildOptions(sel);
+    ui.list.hidden = false;
+    ui.btn.setAttribute("aria-expanded", "true");
+    openList = sel;
+    /* на узком экране список шире поля — не даём ему уехать за край */
+    ui.list.style.left = "0px";
+    var over = ui.list.getBoundingClientRect().right - (window.innerWidth - 10);
+    if(over > 0) ui.list.style.left = (-over) + "px";
+    var cur = ui.list.querySelector('[aria-selected="true"]');
+    if(cur) ui.list.scrollTop = Math.max(0, cur.offsetTop - ui.list.clientHeight/2 + cur.offsetHeight/2);
+  }
+  function closeSelect(sel){
+    var ui = sel.__ui;
+    if(!ui) return;
+    ui.list.hidden = true;
+    ui.btn.setAttribute("aria-expanded", "false");
+    if(openList === sel) openList = null;
+  }
+
+  function enhanceAllSelects(){
+    var list = document.querySelectorAll("select");
+    for(var i = 0; i < list.length; i++){
+      if(!list[i].__ui) enhanceSelect(list[i]);
+      else syncSelect(list[i]);
+    }
+  }
+
+  document.addEventListener("click", function(ev){
+    if(openList && !ev.target.closest(".sel")) closeSelect(openList);
+  });
+  document.addEventListener("keydown", function(ev){
+    if(ev.key === "Escape" && openList){
+      var s = openList;
+      closeSelect(s);
+      s.__ui.btn.focus();
+    }
+  });
 
   /* ── Свой календарь вместо браузерного ────────────────────────────────
      Нативный datepicker не поддаётся стилизации, поэтому поле стало
@@ -1522,7 +1716,14 @@ tr.final-row .cell{font-weight:600}
   document.getElementById("mode-pay").setAttribute("aria-checked", String(mode === "pay"));
   fillSelects();
   buildSteppers();
-  openYears[payDate(1).y] = true;
+  (function(){
+    var nowTs = startOfToday(), y = payDate(1).y;
+    for(var i = 1; i <= cfg.term; i++){
+      var d = payDate(i);
+      if(new Date(d.y, d.m, d.d).getTime() >= nowTs){ y = d.y; break; }
+    }
+    openYears[y] = true;
+  })();
   refresh();
 })();
 </script>
