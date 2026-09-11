@@ -1,0 +1,430 @@
+<title>Премиальная ведомость</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&family=Unbounded:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --page:#EDEEF1; --card:#FFFFFF; --ink:#0B0D13; --muted:#5F626B; --faint:#8A8D96;
+  --rule:#DCDEE3; --rule-2:#C3C6CE;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --page:#0E0F14; --card:#16181F; --ink:#ECEDF1; --muted:#9C9FA9; --faint:#6E717B;
+    --rule:#23262E; --rule-2:#343842;
+  }
+}
+:root[data-theme="dark"]{
+  --page:#0E0F14; --card:#16181F; --ink:#ECEDF1; --muted:#9C9FA9; --faint:#6E717B;
+  --rule:#23262E; --rule-2:#343842;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0; background:var(--page); color:var(--ink);
+  font-family:"Onest",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:15px; line-height:1.5;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px; margin:0 auto; padding:44px 22px 90px; display:flex; flex-direction:column; gap:32px}
+h1,h2,h3,h4{margin:0; text-wrap:balance}
+
+.top{display:flex; flex-direction:column; gap:12px; padding-bottom:24px; border-bottom:1px solid var(--rule-2)}
+.top h1{font-size:clamp(30px,4.4vw,42px); font-weight:600; letter-spacing:-.03em; line-height:1.08}
+.top p{margin:0; color:var(--muted); font-size:14px; max-width:68ch}
+
+.concept{background:var(--card); border:1px solid var(--rule); border-radius:8px; overflow:hidden}
+.c-head{display:flex; flex-wrap:wrap; gap:16px 24px; align-items:flex-start; justify-content:space-between;
+  padding:22px 24px; border-bottom:1px solid var(--rule)}
+.c-name{display:flex; align-items:baseline; gap:12px}
+.c-num{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--faint); letter-spacing:.08em}
+.c-name h2{font-size:23px; font-weight:600; letter-spacing:-.025em}
+.c-head p{margin:7px 0 0; color:var(--muted); font-size:13.5px; max-width:60ch; line-height:1.55}
+.c-meta{display:flex; flex-direction:column; gap:9px; min-width:190px}
+.swatches{display:flex; gap:5px}
+.swatches i{width:26px; height:26px; border-radius:5px; display:block; border:1px solid rgba(127,127,127,.22)}
+.c-meta dl{display:grid; grid-template-columns:auto 1fr; gap:3px 10px; margin:0; font-size:11.5px}
+.c-meta dt{color:var(--faint)}
+.c-meta dd{margin:0; color:var(--muted)}
+.verdict{display:flex; flex-wrap:wrap; gap:8px 20px; padding:14px 24px; border-top:1px solid var(--rule);
+  font-size:12.5px; color:var(--muted)}
+.verdict b{color:var(--ink); font-weight:600}
+
+.mock{padding:26px; overflow-x:auto}
+.mock-in{min-width:600px; border-radius:10px; overflow:hidden; position:relative}
+.m-kpis{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+.m-table{width:100%; border-collapse:collapse; font-size:12.5px}
+.m-table th{font-size:10px; letter-spacing:.08em; text-transform:uppercase; font-weight:500; text-align:right; padding:9px 12px}
+.m-table th:first-child{text-align:left}
+.m-table td{padding:9px 12px; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap}
+.m-table td:first-child{text-align:left}
+.mono{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ═══ 04 — Чёрный пластик ═══════════════════════════════════════════ */
+.c4{background:#08090C; color:#fff; padding:30px; position:relative}
+.c4::before{content:""; position:absolute; inset:0;
+  background:repeating-linear-gradient(58deg,rgba(255,255,255,.028) 0 1px,transparent 1px 13px)}
+.c4 > *{position:relative}
+.c4 .m-hero{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:18px;
+  padding-bottom:24px; border-bottom:1px solid rgba(255,255,255,.09)}
+.c4 .m-hero h3{font-family:"Unbounded",sans-serif; font-size:22px; font-weight:400; letter-spacing:.01em}
+.c4 .m-hero span{display:block; color:#6F7178; font-size:12px; margin-top:10px; letter-spacing:.02em}
+.c4 .chip{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:#B9BCC4;
+  border:1px solid rgba(255,255,255,.16); border-radius:2px; padding:7px 14px}
+.c4 .m-kpis{margin-top:24px}
+.c4 .kpi{padding:20px; border-radius:4px; background:linear-gradient(155deg,#1C1F26 0%,#101217 52%,#0A0B0F 100%);
+  border:1px solid rgba(255,255,255,.07); position:relative; overflow:hidden}
+.c4 .kpi::after{content:""; position:absolute; top:0; left:-30%; width:55%; height:100%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.05),transparent)}
+.c4 .kpi.lead{border-color:rgba(255,255,255,.18)}
+.c4 .kpi em{font-style:normal; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:#6F7178}
+.c4 .kpi strong{display:block; margin-top:12px; font-family:"Unbounded",sans-serif; font-size:23px;
+  font-weight:400; letter-spacing:-.01em}
+.c4 .kpi.lead strong{color:#fff}
+.c4 .kpi small{display:block; margin-top:7px; font-size:11px; color:#8A8D95}
+.c4 .m-acts{display:flex; gap:10px; margin:24px 0 20px}
+.c4 .btn{border:0; font:inherit; font-size:12px; letter-spacing:.06em; text-transform:uppercase;
+  padding:13px 26px; border-radius:2px; cursor:default}
+.c4 .btn.pri{background:#F3154A; color:#fff}
+.c4 .btn.sec{background:transparent; color:#D6D8DD; border:1px solid rgba(255,255,255,.2)}
+.c4 .m-table th{color:#6F7178; border-bottom:1px solid rgba(255,255,255,.14)}
+.c4 .m-table td{border-bottom:1px solid rgba(255,255,255,.05)}
+.c4 .m-table tr.lead td{background:rgba(255,255,255,.03)}
+.c4 .v-a{color:#fff}
+.c4 .v-b{color:#8A8D95}
+
+/* ═══ 05 — Неоновый контур ══════════════════════════════════════════ */
+.c5{background:#0B0D13; color:#fff; padding:30px; position:relative; overflow:hidden}
+.c5::before{content:""; position:absolute; left:-14%; top:-58%; width:70%; height:190%;
+  background:radial-gradient(closest-side,rgba(147,64,222,.5),transparent 72%); filter:blur(50px)}
+.c5::after{content:""; position:absolute; right:-18%; bottom:-72%; width:66%; height:180%;
+  background:radial-gradient(closest-side,rgba(91,120,251,.4),transparent 72%); filter:blur(52px)}
+.c5 > *{position:relative}
+.c5 .m-hero h3{font-size:29px; font-weight:600; letter-spacing:-.03em; line-height:1.08}
+.c5 .m-hero span{display:block; color:#A4A6AA; font-size:12.5px; margin-top:10px}
+.c5 .m-kpis{margin-top:26px}
+.c5 .kpi{padding:19px 20px; border-radius:20px; background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.1)}
+.c5 .kpi.lead{border-color:rgba(204,162,242,.5); background:rgba(147,64,222,.14);
+  box-shadow:0 0 34px -6px rgba(147,64,222,.55), inset 0 0 24px -12px rgba(204,162,242,.5)}
+.c5 .kpi em{font-style:normal; font-size:11px; color:#A4A6AA}
+.c5 .kpi strong{display:block; margin-top:11px; font-size:27px; font-weight:600; letter-spacing:-.035em}
+.c5 .kpi.lead strong{color:#EBD9FF; text-shadow:0 0 22px rgba(204,162,242,.75)}
+.c5 .kpi small{display:block; margin-top:6px; font-size:11px; color:#8B8E96}
+.c5 .m-acts{display:flex; gap:10px; margin:24px 0 20px}
+.c5 .btn{border:0; font:inherit; font-size:13px; font-weight:500; padding:12px 24px;
+  border-radius:100px; cursor:default}
+.c5 .btn.pri{background:linear-gradient(144deg,#9340DE,#5B78FB); color:#fff;
+  box-shadow:0 8px 26px -10px rgba(147,64,222,.9)}
+.c5 .btn.sec{background:rgba(255,255,255,.06); color:#E7E8EC; border:1px solid rgba(255,255,255,.14)}
+.c5 .m-table th{color:#8B8E96; border-bottom:1px solid rgba(255,255,255,.12)}
+.c5 .m-table td{border-bottom:1px solid rgba(255,255,255,.05)}
+.c5 .m-table tr.lead td{background:rgba(147,64,222,.1)}
+.c5 .v-a{color:#CCA2F2}
+.c5 .v-b{color:#8B8E96}
+
+/* ═══ 06 — Матовое стекло ═══════════════════════════════════════════ */
+.c6{padding:30px; color:#fff; position:relative; overflow:hidden;
+  background:linear-gradient(148deg,#2A1B4D 0%,#1A2350 42%,#101324 100%)}
+.c6::before{content:""; position:absolute; right:-8%; top:-40%; width:60%; height:150%;
+  background:radial-gradient(closest-side,rgba(204,162,242,.42),transparent 70%); filter:blur(40px)}
+.c6::after{content:""; position:absolute; left:-12%; bottom:-46%; width:52%; height:140%;
+  background:radial-gradient(closest-side,rgba(63,168,238,.34),transparent 70%); filter:blur(44px)}
+.c6 > *{position:relative}
+.c6 .m-hero{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:16px}
+.c6 .m-hero h3{font-size:28px; font-weight:600; letter-spacing:-.03em}
+.c6 .m-hero span{display:block; color:rgba(255,255,255,.66); font-size:12.5px; margin-top:9px}
+.c6 .glass{background:rgba(255,255,255,.09); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,.16); border-radius:22px}
+.c6 .tag{font-size:11.5px; padding:8px 15px; border-radius:100px; color:rgba(255,255,255,.8)}
+.c6 .m-kpis{margin-top:24px}
+.c6 .kpi{padding:19px 20px}
+.c6 .kpi.lead{background:rgba(255,255,255,.17); border-color:rgba(255,255,255,.3)}
+.c6 .kpi em{font-style:normal; font-size:11.5px; color:rgba(255,255,255,.74)}
+.c6 .kpi strong{display:block; margin-top:11px; font-size:26px; font-weight:600; letter-spacing:-.035em}
+.c6 .kpi small{display:block; margin-top:6px; font-size:11px; color:rgba(255,255,255,.6)}
+.c6 .panel{margin-top:22px; padding:18px 20px}
+.c6 .panel h4{font-size:13px; font-weight:500; color:rgba(255,255,255,.8); margin-bottom:12px}
+.c6 .m-table th{color:rgba(255,255,255,.6); border-bottom:1px solid rgba(255,255,255,.16)}
+.c6 .m-table td{border-bottom:1px solid rgba(255,255,255,.08)}
+.c6 .m-table tr.lead td{background:rgba(255,255,255,.08)}
+.c6 .v-a{color:#E4D3FA}
+.c6 .v-b{color:rgba(255,255,255,.62)}
+
+/* ═══ 07 — Белый лист ═══════════════════════════════════════════════ */
+.c7{background:#FCFCFC; color:#0B0D13; padding:38px 34px}
+.c7 .m-hero{padding-bottom:30px; border-bottom:1px solid #EDEDEE}
+.c7 .m-hero .eyebrow{font-size:10.5px; letter-spacing:.18em; text-transform:uppercase; color:#A4A6AA}
+.c7 .m-hero h3{font-family:"Unbounded",sans-serif; font-size:26px; font-weight:300; letter-spacing:-.02em;
+  margin-top:14px; line-height:1.2}
+.c7 .m-hero span{display:block; color:#77797F; font-size:12.5px; margin-top:12px}
+.c7 .m-kpis{margin-top:30px; gap:0; border-top:1px solid #EDEDEE}
+.c7 .kpi{padding:22px 24px 22px 0; border-right:1px solid #EDEDEE}
+.c7 .kpi:last-child{border-right:0}
+.c7 .kpi:not(:first-child){padding-left:24px}
+.c7 .kpi em{font-style:normal; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#A4A6AA}
+.c7 .kpi strong{display:block; margin-top:14px; font-family:"Unbounded",sans-serif; font-size:24px;
+  font-weight:300; letter-spacing:-.03em}
+.c7 .kpi.lead strong{color:#F3154A}
+.c7 .kpi small{display:block; margin-top:8px; font-size:11.5px; color:#77797F}
+.c7 .m-acts{display:flex; gap:12px; margin:28px 0 26px; padding-top:26px; border-top:1px solid #EDEDEE}
+.c7 .btn{border:0; font:inherit; font-size:12.5px; padding:12px 26px; border-radius:2px; cursor:default}
+.c7 .btn.pri{background:#0B0D13; color:#fff}
+.c7 .btn.sec{background:transparent; color:#0B0D13; border:1px solid #DCDCDE}
+.c7 .m-table th{color:#A4A6AA; border-bottom:1px solid #0B0D13; font-weight:400}
+.c7 .m-table td{border-bottom:1px solid #F1F1F2}
+.c7 .m-table tr.lead td{font-weight:600}
+.c7 .v-a{color:#0B0D13}
+.c7 .v-b{color:#77797F}
+
+.pick{display:grid; grid-template-columns:repeat(auto-fit,minmax(248px,1fr)); gap:20px 30px;
+  padding-top:26px; border-top:1px solid var(--rule-2)}
+.pick h3{font-size:12px; letter-spacing:.05em; text-transform:uppercase; margin-bottom:8px}
+.pick p{margin:0; font-size:13px; color:var(--muted); line-height:1.55}
+.note-legal{font-size:11.5px; color:var(--faint); line-height:1.5; max-width:86ch; margin:0}
+
+@media (max-width:720px){
+  .wrap{padding:26px 13px 64px; gap:22px}
+  .c-head{padding:18px; flex-direction:column}
+  .mock{padding:13px}
+  .c4,.c5,.c6{padding:20px}
+  .c7{padding:24px 20px}
+  .m-kpis{grid-template-columns:1fr}
+  .c7 .kpi{border-right:0; border-bottom:1px solid #EDEDEE; padding:18px 0}
+  .c7 .kpi:not(:first-child){padding-left:0}
+}
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <h1>Премиальные варианты</h1>
+    <p>Продолжение серии — четыре решения с упором на «дорого». Палитра та же, снятая с belveb.by, но премиальность здесь достигается разными средствами: фактурой, светом, прозрачностью и пустотой. В каждом мокапе те же цифры вашего кредита, чтобы сравнивать на равных.</p>
+  </header>
+
+  <!-- ═══ 04 ═══ -->
+  <section class="concept">
+    <div class="c-head">
+      <div>
+        <div class="c-name"><span class="c-num">04</span><h2>Чёрный пластик</h2></div>
+        <p>Сделано с premium-карты Белкарт Максимум: почти чёрный фон, по которому идёт еле различимый диагональный штрих — тот же угол, что у шевронов на пластике. Плитки отливают металлом за счёт диагонального градиента и светового блика. Цифры набраны Unbounded — широким шрифтом, который читается как гравировка.</p>
+      </div>
+      <div class="c-meta">
+        <div class="swatches">
+          <i style="background:#08090C"></i><i style="background:#1C1F26"></i><i style="background:#6F7178"></i>
+          <i style="background:#F3154A"></i><i style="background:#FFFFFF"></i>
+        </div>
+        <dl>
+          <dt>Фон</dt><dd>#08090C, штрих 58°</dd>
+          <dt>Акцент</dt><dd>#F3154A, одна кнопка</dd>
+          <dt>Радиус</dt><dd>2–4 px, почти прямой</dd>
+          <dt>Шрифт</dt><dd>Unbounded 400 / Onest</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="mock">
+      <div class="mock-in c4">
+        <div class="m-hero">
+          <div><h3>Кредитная ведомость</h3><span>238 000 BYN · 14,5 % годовых · 300 платежей</span></div>
+          <span class="chip">Льготный период</span>
+        </div>
+        <div class="m-kpis">
+          <div class="kpi lead"><em>Платёж сейчас</em><strong class="tnum">1 795,00</strong><small>1 785,00 долг + 10,00 проценты</small></div>
+          <div class="kpi"><em>После льготного</em><strong class="tnum">1 896,95</strong><small>с 26 сентября 2031</small></div>
+          <div class="kpi"><em>Проценты за срок</em><strong class="tnum">324 969</strong><small>137 % от тела кредита</small></div>
+        </div>
+        <div class="m-acts">
+          <button class="btn pri">Внести досрочно</button>
+          <button class="btn sec">Сценарии</button>
+        </div>
+        <table class="m-table">
+          <thead><tr><th>Период</th><th>Основной долг</th><th>Проценты</th><th>Платёж</th><th>Остаток</th></tr></thead>
+          <tbody>
+            <tr class="lead"><td>2026 · 4 платежа</td><td class="v-a">7 140,00</td><td class="v-b">40,00</td><td class="v-a">7 180,00</td><td class="v-a">230 860,00</td></tr>
+            <tr><td>26 сен 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>236 215,00</td></tr>
+            <tr><td>26 окт 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>234 430,00</td></tr>
+            <tr><td>26 ноя 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>232 645,00</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="verdict">
+      <span><b>Сильная сторона:</b> ровно то, что банк сам показывает премиальным клиентам — попадание в их же материал.</span>
+      <span><b>Риск:</b> Unbounded в цифрах шире моноширинного, длинные суммы занимают больше места.</span>
+    </div>
+  </section>
+
+  <!-- ═══ 05 ═══ -->
+  <section class="concept">
+    <div class="c-head">
+      <div>
+        <div class="c-name"><span class="c-num">05</span><h2>Неоновый контур</h2></div>
+        <p>Из рекламной кампании «Сияй от выгоды»: тёмная сцена, по которой разлито фиолетовое и синее свечение. Главная плитка светится изнутри и отбрасывает ореол, кнопка действия залита градиентом с подсветкой. Самый эмоциональный вариант — в нём есть то, чего обычно нет в банковских расчётах.</p>
+      </div>
+      <div class="c-meta">
+        <div class="swatches">
+          <i style="background:#0B0D13"></i><i style="background:#9340DE"></i><i style="background:#5B78FB"></i>
+          <i style="background:#CCA2F2"></i><i style="background:#EBD9FF"></i>
+        </div>
+        <dl>
+          <dt>Фон</dt><dd>#0B0D13 + свечения</dd>
+          <dt>Акцент</dt><dd>градиент 144°</dd>
+          <dt>Радиус</dt><dd>20 px, кнопки 100 px</dd>
+          <dt>Шрифт</dt><dd>Onest 600 / 400</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="mock">
+      <div class="mock-in c5">
+        <div class="m-hero">
+          <h3>Ваш кредит на 25 лет</h3>
+          <span>238 000 BYN под 14,5 % · закрытие 26 августа 2051</span>
+        </div>
+        <div class="m-kpis">
+          <div class="kpi lead"><em>Платёж сейчас</em><strong class="tnum">1 795,00</strong><small>первые пять лет</small></div>
+          <div class="kpi"><em>После льготного</em><strong class="tnum">1 896,95</strong><small>с сентября 2031</small></div>
+          <div class="kpi"><em>Проценты за срок</em><strong class="tnum">324 969</strong><small>137 % от тела</small></div>
+        </div>
+        <div class="m-acts">
+          <button class="btn pri">Погасить досрочно</button>
+          <button class="btn sec">Сравнить сценарии</button>
+        </div>
+        <table class="m-table">
+          <thead><tr><th>Период</th><th>Основной долг</th><th>Проценты</th><th>Платёж</th><th>Остаток</th></tr></thead>
+          <tbody>
+            <tr class="lead"><td>2026 · 4 платежа</td><td class="v-a">7 140,00</td><td class="v-b">40,00</td><td>7 180,00</td><td>230 860,00</td></tr>
+            <tr><td>26 сен 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>236 215,00</td></tr>
+            <tr><td>26 окт 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>234 430,00</td></tr>
+            <tr><td>26 ноя 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>232 645,00</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="verdict">
+      <span><b>Сильная сторона:</b> запоминается мгновенно, отлично смотрится на телефоне вечером.</span>
+      <span><b>Риск:</b> свечение притягивает взгляд к одной цифре, остальная таблица уходит в тень.</span>
+    </div>
+  </section>
+
+  <!-- ═══ 06 ═══ -->
+  <section class="concept">
+    <div class="c-head">
+      <div>
+        <div class="c-name"><span class="c-num">06</span><h2>Матовое стекло</h2></div>
+        <p>Панели из полупрозрачного стекла лежат поверх фиолетово-синей глубины и размывают её под собой. Фон живёт, содержимое остаётся читаемым — приём из интерфейса UP Online, только доведённый до конца. Выбранный блок становится светлее остальных, без единой цветной рамки.</p>
+      </div>
+      <div class="c-meta">
+        <div class="swatches">
+          <i style="background:#2A1B4D"></i><i style="background:#1A2350"></i><i style="background:#101324"></i>
+          <i style="background:rgba(255,255,255,.5)"></i><i style="background:#CCA2F2"></i>
+        </div>
+        <dl>
+          <dt>Фон</dt><dd>градиент 148°</dd>
+          <dt>Панели</dt><dd>blur 18 px</dd>
+          <dt>Радиус</dt><dd>22 px</dd>
+          <dt>Шрифт</dt><dd>Onest 600 / 400</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="mock">
+      <div class="mock-in c6">
+        <div class="m-hero">
+          <div><h3>Кредитная ведомость</h3><span>238 000 BYN · 14,5 % · 300 платежей</span></div>
+          <span class="glass tag">Сокращаем срок</span>
+        </div>
+        <div class="m-kpis">
+          <div class="kpi glass lead"><em>Платёж сейчас</em><strong class="tnum">1 795,00</strong><small>первые пять лет</small></div>
+          <div class="kpi glass"><em>После льготного</em><strong class="tnum">1 896,95</strong><small>с сентября 2031</small></div>
+          <div class="kpi glass"><em>Всего выплат</em><strong class="tnum">562 969</strong><small>тело плюс проценты</small></div>
+        </div>
+        <div class="panel glass">
+          <h4>График платежей</h4>
+          <table class="m-table">
+            <thead><tr><th>Период</th><th>Основной долг</th><th>Проценты</th><th>Платёж</th><th>Остаток</th></tr></thead>
+            <tbody>
+              <tr class="lead"><td>2026 · 4 платежа</td><td class="v-a">7 140,00</td><td class="v-b">40,00</td><td>7 180,00</td><td>230 860,00</td></tr>
+              <tr><td>26 сен 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>236 215,00</td></tr>
+              <tr><td>26 окт 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>234 430,00</td></tr>
+              <tr><td>26 ноя 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>232 645,00</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="verdict">
+      <span><b>Сильная сторона:</b> выглядит современнее всего остального и не требует ни одного изображения.</span>
+      <span><b>Риск:</b> размытие нагружает слабые телефоны, на старых моделях панели станут просто полупрозрачными.</span>
+    </div>
+  </section>
+
+  <!-- ═══ 07 ═══ -->
+  <section class="concept">
+    <div class="c-head">
+      <div>
+        <div class="c-name"><span class="c-num">07</span><h2>Белый лист</h2></div>
+        <p>Премиальность без единого тёмного пикселя — через воздух и сдержанность. Почти белый фон, волосяные линейки вместо карточек, тонкое начертание Unbounded в цифрах, малиновый ровно один раз на главной сумме. Так оформляют отчёты для частного банкинга, где дорого выглядит не оформление, а его отсутствие.</p>
+      </div>
+      <div class="c-meta">
+        <div class="swatches">
+          <i style="background:#FCFCFC"></i><i style="background:#EDEDEE"></i><i style="background:#A4A6AA"></i>
+          <i style="background:#0B0D13"></i><i style="background:#F3154A"></i>
+        </div>
+        <dl>
+          <dt>Фон</dt><dd>#FCFCFC</dd>
+          <dt>Акцент</dt><dd>#F3154A, однократно</dd>
+          <dt>Радиус</dt><dd>2 px, почти нет</dd>
+          <dt>Шрифт</dt><dd>Unbounded 300 / Onest</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="mock">
+      <div class="mock-in c7">
+        <div class="m-hero">
+          <span class="eyebrow">Договор · льготный период 5 лет</span>
+          <h3>Кредитная ведомость</h3>
+          <span>238 000 BYN · 14,5 % годовых · 300 платежей до 26 августа 2051</span>
+        </div>
+        <div class="m-kpis">
+          <div class="kpi lead"><em>Платёж сейчас</em><strong class="tnum">1 795,00</strong><small>1 785,00 долг + 10,00 проценты</small></div>
+          <div class="kpi"><em>После льготного</em><strong class="tnum">1 896,95</strong><small>с 26 сентября 2031</small></div>
+          <div class="kpi"><em>Проценты за срок</em><strong class="tnum">324 969</strong><small>137 % от тела кредита</small></div>
+        </div>
+        <div class="m-acts">
+          <button class="btn pri">Внести досрочно</button>
+          <button class="btn sec">Сравнить сценарии</button>
+        </div>
+        <table class="m-table">
+          <thead><tr><th>Период</th><th>Основной долг</th><th>Проценты</th><th>Платёж</th><th>Остаток</th></tr></thead>
+          <tbody>
+            <tr class="lead"><td>2026 · 4 платежа</td><td class="v-a">7 140,00</td><td class="v-b">40,00</td><td class="v-a">7 180,00</td><td class="v-a">230 860,00</td></tr>
+            <tr><td>26 сен 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>236 215,00</td></tr>
+            <tr><td>26 окт 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>234 430,00</td></tr>
+            <tr><td>26 ноя 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>232 645,00</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="verdict">
+      <span><b>Сильная сторона:</b> единственный вариант, который нормально печатается и не устаревает.</span>
+      <span><b>Риск:</b> на маленьком экране воздух схлопывается, и остаётся просто светлая таблица.</span>
+    </div>
+  </section>
+
+  <section class="pick">
+    <div>
+      <h3>Самое премиальное</h3>
+      <p>Четвёртый. Он единственный говорит на языке материала — чёрного пластика с шевронами, который банк вручает премиальным клиентам.</p>
+    </div>
+    <div>
+      <h3>Самое эффектное</h3>
+      <p>Пятый. Если задача — чтобы человек сказал «ого» при первом открытии, свечение сработает лучше любой типографики.</p>
+    </div>
+    <div>
+      <h3>Самое современное</h3>
+      <p>Шестой. Стекло сейчас читается как признак свежего продукта, но проверьте на своём телефоне: размытие любит съедать плавность.</p>
+    </div>
+    <div>
+      <h3>Самое долговечное</h3>
+      <p>Седьмой. Через три года четвёртый и пятый будут выглядеть как мода своего времени, а белый лист останется таким же.</p>
+    </div>
+  </section>
+
+  <p class="note-legal">В макетах использованы цвета и приёмы вёрстки с публичных страниц belveb.by для оценки совместимости со стилем банка. Логотип и фирменные знаки не воспроизводятся, макеты не являются продуктом Банка БелВЭБ и не выпущены от его имени.</p>
+</div>
