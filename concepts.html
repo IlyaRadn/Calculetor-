@@ -1,0 +1,391 @@
+<title>Три концепции калькулятора</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&family=Unbounded:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* ── Рамка страницы: нейтральная, чтобы концепции звучали сами ───────── */
+:root{
+  --page:#EDEEF1; --card:#FFFFFF; --ink:#0B0D13; --muted:#5F626B; --faint:#8A8D96;
+  --rule:#D9DBE0; --rule-2:#C3C6CE;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --page:#101116; --card:#171920; --ink:#ECEDF1; --muted:#9C9FA9; --faint:#6E717B;
+    --rule:#252831; --rule-2:#363A45;
+  }
+}
+:root[data-theme="dark"]{
+  --page:#101116; --card:#171920; --ink:#ECEDF1; --muted:#9C9FA9; --faint:#6E717B;
+  --rule:#252831; --rule-2:#363A45;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0; background:var(--page); color:var(--ink);
+  font-family:"Onest",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:15px; line-height:1.5;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px; margin:0 auto; padding:44px 22px 90px; display:flex; flex-direction:column; gap:34px}
+h1,h2,h3,h4{margin:0; text-wrap:balance}
+
+.top{display:flex; flex-direction:column; gap:12px; padding-bottom:24px; border-bottom:1px solid var(--rule-2)}
+.top h1{font-size:clamp(30px,4.4vw,42px); font-weight:600; letter-spacing:-.025em; line-height:1.08}
+.top p{margin:0; color:var(--muted); font-size:14px; max-width:66ch}
+.src{display:flex; flex-wrap:wrap; gap:7px; margin-top:4px}
+.src b{font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:500; letter-spacing:.02em;
+  padding:4px 8px; border-radius:3px; border:1px solid var(--rule-2); color:var(--muted); display:flex; align-items:center; gap:6px}
+.src i{width:10px; height:10px; border-radius:2px; display:block}
+
+/* ── Карточка концепции ──────────────────────────────────────────────── */
+.concept{background:var(--card); border:1px solid var(--rule); border-radius:6px; overflow:hidden}
+.c-head{display:flex; flex-wrap:wrap; gap:16px 24px; align-items:flex-start; justify-content:space-between;
+  padding:22px 24px; border-bottom:1px solid var(--rule)}
+.c-name{display:flex; align-items:baseline; gap:12px}
+.c-num{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--faint); letter-spacing:.08em}
+.c-name h2{font-size:23px; font-weight:600; letter-spacing:-.02em}
+.c-head p{margin:6px 0 0; color:var(--muted); font-size:13.5px; max-width:58ch; line-height:1.55}
+.c-meta{display:flex; flex-direction:column; gap:9px; min-width:196px}
+.swatches{display:flex; gap:5px}
+.swatches i{width:26px; height:26px; border-radius:4px; display:block; border:1px solid rgba(127,127,127,.22)}
+.c-meta dl{display:grid; grid-template-columns:auto 1fr; gap:2px 10px; margin:0; font-size:11.5px}
+.c-meta dt{color:var(--faint)}
+.c-meta dd{margin:0; color:var(--muted)}
+.verdict{display:flex; flex-wrap:wrap; gap:8px 20px; padding:13px 24px; border-top:1px solid var(--rule);
+  font-size:12.5px; color:var(--muted)}
+.verdict b{color:var(--ink); font-weight:600}
+
+/* ── Общий каркас мокапа ─────────────────────────────────────────────── */
+.mock{padding:26px; overflow-x:auto}
+.mock-in{min-width:600px; border-radius:8px; overflow:hidden}
+.m-kpis{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+.m-row-head{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap}
+.m-table{width:100%; border-collapse:collapse; font-size:12.5px}
+.m-table th{font-size:10px; letter-spacing:.07em; text-transform:uppercase; font-weight:600; text-align:right; padding:8px 10px}
+.m-table th:first-child{text-align:left}
+.m-table td{padding:8px 10px; text-align:right; font-family:"IBM Plex Mono",monospace;
+  font-variant-numeric:tabular-nums; white-space:nowrap}
+.m-table td:first-child{text-align:left; font-family:"Onest",sans-serif}
+.mono{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+
+/* ═══ Концепция 1 — Премиум ══════════════════════════════════════════ */
+.c1{background:#0B0D13; color:#FFFFFF; padding:28px; font-family:"Onest",sans-serif}
+.c1 .m-hero{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:18px;
+  padding-bottom:22px; border-bottom:1px solid rgba(255,255,255,.1)}
+.c1 .m-hero h3{font-size:31px; font-weight:600; letter-spacing:-.03em; line-height:1.06}
+.c1 .m-hero span{display:block; color:#77797F; font-size:12.5px; margin-top:8px}
+.c1 .pill{font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:#A4A6AA;
+  border:1px solid rgba(255,255,255,.18); border-radius:100px; padding:6px 14px}
+.c1 .m-kpis{margin-top:22px}
+.c1 .kpi{background:#141516; border:1px solid rgba(255,255,255,.08); border-radius:18px; padding:18px}
+.c1 .kpi.lead{background:linear-gradient(150deg,#282B32,#141516); border-color:rgba(243,21,74,.35)}
+.c1 .kpi em{font-style:normal; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:#77797F}
+.c1 .kpi strong{display:block; margin-top:9px; font-size:25px; font-weight:600; letter-spacing:-.02em}
+.c1 .kpi.lead strong{color:#FF6B8A}
+.c1 .kpi small{display:block; margin-top:5px; font-size:11.5px; color:#A4A6AA}
+.c1 .m-actions{display:flex; gap:10px; margin:22px 0 18px; flex-wrap:wrap}
+.c1 .btn{border:0; font:inherit; font-size:13px; font-weight:500; padding:11px 22px; border-radius:100px; cursor:default}
+.c1 .btn.pri{background:#F3154A; color:#fff}
+.c1 .btn.sec{background:transparent; color:#EDEEF1; border:1px solid rgba(255,255,255,.22)}
+.c1 .m-table th{color:#77797F; border-bottom:1px solid rgba(255,255,255,.12)}
+.c1 .m-table td{border-bottom:1px solid rgba(255,255,255,.06)}
+.c1 .m-table tr.lead td{background:rgba(243,21,74,.07)}
+.c1 .v-a{color:#FF6B8A}
+.c1 .v-b{color:#A4A6AA}
+
+/* ═══ Концепция 2 — Витрина ══════════════════════════════════════════ */
+.c2{background:#FFFFFF; color:#0B0D13; padding:26px; font-family:"Onest",sans-serif}
+.c2 .m-hero h3{font-size:29px; font-weight:600; letter-spacing:-.03em; line-height:1.1}
+.c2 .m-hero span{display:block; color:#77797F; font-size:13px; margin-top:7px}
+.c2 .tabs{display:flex; gap:6px}
+.c2 .tab{font-size:12.5px; padding:8px 16px; border-radius:100px; background:#F3F3F3; color:#5F626B}
+.c2 .tab.on{background:#5B78FB; color:#fff}
+.c2 .m-kpis{margin-top:20px}
+.c2 .kpi{border-radius:22px; padding:19px 20px; color:#fff; min-height:118px;
+  display:flex; flex-direction:column; justify-content:space-between}
+.c2 .kpi.g1{background:linear-gradient(144.13deg,#9340DE,#CCA2F2)}
+.c2 .kpi.g2{background:linear-gradient(144.13deg,#3FA8EE,#8ECFFA)}
+.c2 .kpi.g3{background:linear-gradient(144.13deg,#6F7689,#D6DBE9)}
+.c2 .kpi em{font-style:normal; font-size:11.5px; font-weight:500; opacity:.92}
+.c2 .kpi strong{font-size:26px; font-weight:600; letter-spacing:-.02em; display:block; margin-top:10px}
+.c2 .kpi small{display:block; margin-top:4px; font-size:11.5px; opacity:.85}
+.c2 .panel{margin-top:20px; background:#F3F3F3; border-radius:30px; padding:20px 22px}
+.c2 .panel h4{font-size:14px; font-weight:600; margin-bottom:12px}
+.c2 .m-table th{color:#77797F; border-bottom:1px solid #E3E4E7}
+.c2 .m-table td{border-bottom:1px solid #EAEBEE}
+.c2 .m-table tr.lead td{background:#fff}
+.c2 .btn{border:0; font:inherit; font-size:13px; font-weight:500; padding:11px 22px; border-radius:100px;
+  background:#5B78FB; color:#fff; margin-top:16px; cursor:default}
+.c2 .v-a{color:#7A2ECC}
+.c2 .v-b{color:#77797F}
+
+/* ═══ Концепция 3 — Стрелка ══════════════════════════════════════════ */
+.c3{background:#F6F6F7; color:#0B0D13; font-family:"Onest",sans-serif}
+.c3 .band{background:#0B0D13; color:#fff; padding:26px 28px 30px; border-radius:0 0 70px 0; position:relative; overflow:hidden}
+.c3 .band::after{content:""; position:absolute; right:-40px; top:-60px; width:220px; height:220px;
+  background:conic-gradient(from 210deg,rgba(243,21,74,.55),rgba(91,120,251,.35),transparent 60%);
+  filter:blur(36px)}
+.c3 .band h3{font-family:"Unbounded",sans-serif; font-size:27px; font-weight:600; letter-spacing:-.03em;
+  line-height:1.14; position:relative}
+.c3 .band span{display:block; color:#A4A6AA; font-size:12.5px; margin-top:9px; position:relative}
+.c3 .m-kpis{padding:22px 28px 0}
+.c3 .kpi{background:#fff; padding:17px 19px; border-radius:26px 0 26px 0; border:1px solid #E4E5E9}
+.c3 .kpi.lead{border-color:#0B0D13; border-width:1.5px}
+.c3 .kpi em{font-style:normal; font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; color:#8A8D96}
+.c3 .kpi strong{display:block; margin-top:8px; font-size:24px; font-weight:600; letter-spacing:-.025em}
+.c3 .kpi.lead strong{color:#F3154A}
+.c3 .kpi small{display:block; margin-top:4px; font-size:11.5px; color:#77797F}
+.c3 .arrows{display:flex; gap:0; margin:20px 28px 0; border:1px solid #DEDFE4; border-radius:100px; overflow:hidden; width:fit-content}
+.c3 .arrows span{font-size:12.5px; padding:9px 20px; color:#5F626B; background:#fff}
+.c3 .arrows span.on{background:#0B0D13; color:#fff}
+.c3 .panel{margin:18px 0 0; padding:0 28px 26px}
+.c3 .m-table{background:#fff; border-radius:20px 0 20px 0; overflow:hidden}
+.c3 .m-table th{color:#8A8D96; border-bottom:1px solid #E9EAED; background:#fff}
+.c3 .m-table td{border-bottom:1px solid #F0F1F3}
+.c3 .m-table tr.lead td{background:#FFF3F6}
+.c3 .v-a{color:#F3154A}
+.c3 .v-b{color:#77797F}
+
+/* ── Как выбрать ─────────────────────────────────────────────────────── */
+.pick{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px 30px;
+  padding-top:26px; border-top:1px solid var(--rule-2)}
+.pick h3{font-size:12px; letter-spacing:.05em; text-transform:uppercase; margin-bottom:8px}
+.pick p{margin:0 0 8px; font-size:13px; color:var(--muted); line-height:1.55}
+.pick p:last-child{margin-bottom:0}
+.note-legal{font-size:11.5px; color:var(--faint); line-height:1.5; max-width:86ch; margin:0}
+
+@media (max-width:720px){
+  .wrap{padding:26px 13px 64px; gap:24px}
+  .c-head{padding:18px; flex-direction:column}
+  .mock{padding:14px}
+  .c1,.c2{padding:18px}
+  .c3 .band{padding:20px 18px 24px; border-radius:0 0 48px 0}
+  .c3 .m-kpis{padding:18px 18px 0}
+  .c3 .arrows{margin:16px 18px 0}
+  .c3 .panel{padding:0 18px 20px}
+  .m-kpis{grid-template-columns:1fr}
+}
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <h1>Три концепции калькулятора</h1>
+    <p>Все три построены на реальной айдентике Банка БелВЭБ — палитра, скругления и градиенты сняты со страниц belveb.by, включая раздел «Премиум». Шрифт банка Cera Pro лицензионный, поэтому взят Onest: тот же геометричный гротеск с родной кириллицей. Ниже — не картинки, а рабочие блоки калькулятора в каждом стиле.</p>
+    <div class="src">
+      <b><i style="background:#0B0D13"></i>#0B0D13 фон</b>
+      <b><i style="background:#F3154A"></i>#F3154A акцент</b>
+      <b><i style="background:#5B78FB"></i>#5B78FB индиго</b>
+      <b><i style="background:#9340DE"></i>#9340DE градиент</b>
+      <b><i style="background:#77797F"></i>#77797F текст</b>
+      <b>радиусы 20 / 30 / 70×0</b>
+    </div>
+  </header>
+
+  <!-- ═══════════════ 1 ═══════════════ -->
+  <section class="concept">
+    <div class="c-head">
+      <div>
+        <div class="c-name"><span class="c-num">01</span><h2>Приватный кабинет</h2></div>
+        <p>Прямое продолжение раздела «Премиум»: глубокий чёрный фон, карточки на тон светлее, тонкие белые границы в 8–10 % прозрачности. Цифры светятся на тёмном, малиновый появляется только там, где есть что подчеркнуть. Спокойно, дорого, без единого лишнего пятна.</p>
+      </div>
+      <div class="c-meta">
+        <div class="swatches">
+          <i style="background:#0B0D13"></i><i style="background:#141516"></i><i style="background:#282B32"></i>
+          <i style="background:#F3154A"></i><i style="background:#A4A6AA"></i>
+        </div>
+        <dl>
+          <dt>Фон</dt><dd>#0B0D13 — как /premium/</dd>
+          <dt>Акцент</dt><dd>#F3154A, дозированно</dd>
+          <dt>Радиус</dt><dd>18 px, кнопки 100 px</dd>
+          <dt>Шрифт</dt><dd>Onest 600 / 400</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="mock">
+      <div class="mock-in c1">
+        <div class="m-hero">
+          <div>
+            <h3>Кредитная ведомость</h3>
+            <span>238 000 Br · 14,5 % годовых · 300 платежей</span>
+          </div>
+          <span class="pill">Льготный период · 5 лет</span>
+        </div>
+
+        <div class="m-kpis">
+          <div class="kpi lead">
+            <em>Платёж сейчас</em>
+            <strong class="mono">1 795,00</strong>
+            <small>1 785,00 долг + 10,00 проценты</small>
+          </div>
+          <div class="kpi">
+            <em>После льготного</em>
+            <strong class="mono">1 896,95</strong>
+            <small>с 26 сентября 2031</small>
+          </div>
+          <div class="kpi">
+            <em>Проценты за срок</em>
+            <strong class="mono">324 969</strong>
+            <small>137 % от тела кредита</small>
+          </div>
+        </div>
+
+        <div class="m-actions">
+          <button class="btn pri">Внести досрочно</button>
+          <button class="btn sec">Сравнить сценарии</button>
+        </div>
+
+        <table class="m-table">
+          <thead><tr><th>Период</th><th>Основной долг</th><th>Проценты</th><th>Платёж</th><th>Остаток</th></tr></thead>
+          <tbody>
+            <tr class="lead"><td>2026 · 4 платежа</td><td class="v-a">7 140,00</td><td class="v-b">40,00</td><td>7 180,00</td><td>230 860,00</td></tr>
+            <tr><td>26 сен 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>236 215,00</td></tr>
+            <tr><td>26 окт 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>234 430,00</td></tr>
+            <tr><td>26 ноя 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>232 645,00</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="verdict">
+      <span><b>Сильная сторона:</b> длинные таблицы на тёмном читаются спокойнее, глаз не устаёт за 300 строк.</span>
+      <span><b>Риск:</b> печать на бумаге выйдет чёрным пятном.</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════ 2 ═══════════════ -->
+  <section class="concept">
+    <div class="c-head">
+      <div>
+        <div class="c-name"><span class="c-num">02</span><h2>Витрина продукта</h2></div>
+        <p>Логика главной страницы банка: белый лист, крупные скруглённые плитки с фирменными градиентами под 144°, синий индиго на кнопках. Ключевые суммы вынесены в цветные карточки, таблица убрана в светло-серую панель. Читается как страница продукта, а не как выписка.</p>
+      </div>
+      <div class="c-meta">
+        <div class="swatches">
+          <i style="background:#FFFFFF"></i><i style="background:#F3F3F3"></i>
+          <i style="background:linear-gradient(144deg,#9340DE,#CCA2F2)"></i>
+          <i style="background:linear-gradient(144deg,#3FA8EE,#8ECFFA)"></i>
+          <i style="background:#5B78FB"></i>
+        </div>
+        <dl>
+          <dt>Фон</dt><dd>белый + #F3F3F3</dd>
+          <dt>Акцент</dt><dd>#5B78FB, градиенты</dd>
+          <dt>Радиус</dt><dd>22–30 px, крупный</dd>
+          <dt>Шрифт</dt><dd>Onest 600 / 400</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="mock">
+      <div class="mock-in c2">
+        <div class="m-row-head m-hero">
+          <div>
+            <h3>Кредит на 25 лет</h3>
+            <span>238 000 Br под 14,5 % · первый платёж 26 сентября 2026</span>
+          </div>
+          <div class="tabs"><span class="tab on">Сократить срок</span><span class="tab">Снизить платёж</span></div>
+        </div>
+
+        <div class="m-kpis">
+          <div class="kpi g1"><em>Платёж первые 5 лет</em><div><strong class="mono">1 795,00</strong><small>1 785,00 долг + 10,00 проценты</small></div></div>
+          <div class="kpi g2"><em>Платёж после</em><div><strong class="mono">1 896,95</strong><small>с сентября 2031 года</small></div></div>
+          <div class="kpi g3"><em>Всего выплат</em><div><strong class="mono">562 969</strong><small>тело кредита + проценты</small></div></div>
+        </div>
+
+        <div class="panel">
+          <h4>График платежей</h4>
+          <table class="m-table">
+            <thead><tr><th>Период</th><th>Основной долг</th><th>Проценты</th><th>Платёж</th><th>Остаток</th></tr></thead>
+            <tbody>
+              <tr class="lead"><td>2026 · 4 платежа</td><td class="v-a">7 140,00</td><td class="v-b">40,00</td><td>7 180,00</td><td>230 860,00</td></tr>
+              <tr><td>26 сен 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>236 215,00</td></tr>
+              <tr><td>26 окт 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>234 430,00</td></tr>
+              <tr><td>26 ноя 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>232 645,00</td></tr>
+            </tbody>
+          </table>
+          <button class="btn">Добавить досрочный платёж</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="verdict">
+      <span><b>Сильная сторона:</b> понятна с первого взгляда, хорошо ложится на сайт банка рядом с другими продуктами.</span>
+      <span><b>Риск:</b> градиенты на 300 строках спорят с цифрами за внимание.</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════ 3 ═══════════════ -->
+  <section class="concept">
+    <div class="c-head">
+      <div>
+        <div class="c-name"><span class="c-num">03</span><h2>Стрелка</h2></div>
+        <p>Построена на фирменной геометрии: в вёрстке банка встречается скругление <span class="mono">70px 0</span> — угол, повторяющий стрелку логотипа. Здесь это система: тёмная шапка срезана по диагонали, карточки и таблица скруглены по двум углам из четырёх. Светлый интерфейс, малиновый акцент, заголовки широким Unbounded.</p>
+      </div>
+      <div class="c-meta">
+        <div class="swatches">
+          <i style="background:#0B0D13"></i><i style="background:#F6F6F7"></i><i style="background:#FFFFFF"></i>
+          <i style="background:#F3154A"></i><i style="background:#5B78FB"></i>
+        </div>
+        <dl>
+          <dt>Фон</dt><dd>#F6F6F7 + тёмная шапка</dd>
+          <dt>Акцент</dt><dd>#F3154A</dd>
+          <dt>Радиус</dt><dd>асимметричный 26×0</dd>
+          <dt>Шрифт</dt><dd>Unbounded + Onest</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="mock">
+      <div class="mock-in c3">
+        <div class="band">
+          <h3>Ведомость по кредиту</h3>
+          <span>238 000 Br · 14,5 % годовых · 300 платежей до августа 2051</span>
+        </div>
+
+        <div class="m-kpis">
+          <div class="kpi lead"><em>Платёж сейчас</em><strong class="mono">1 795,00</strong><small>первые 5 лет</small></div>
+          <div class="kpi"><em>После льготного</em><strong class="mono">1 896,95</strong><small>с сентября 2031</small></div>
+          <div class="kpi"><em>Проценты за срок</em><strong class="mono">324 969</strong><small>137 % от тела</small></div>
+        </div>
+
+        <div class="arrows"><span class="on">Сократить срок</span><span>Снизить платёж</span></div>
+
+        <div class="panel">
+          <table class="m-table">
+            <thead><tr><th>Период</th><th>Основной долг</th><th>Проценты</th><th>Платёж</th><th>Остаток</th></tr></thead>
+            <tbody>
+              <tr class="lead"><td>2026 · 4 платежа</td><td class="v-a">7 140,00</td><td class="v-b">40,00</td><td>7 180,00</td><td>230 860,00</td></tr>
+              <tr><td>26 сен 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>236 215,00</td></tr>
+              <tr><td>26 окт 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>234 430,00</td></tr>
+              <tr><td>26 ноя 2026</td><td class="v-a">1 785,00</td><td class="v-b">10,00</td><td>1 795,00</td><td>232 645,00</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="verdict">
+      <span><b>Сильная сторона:</b> узнаётся как БелВЭБ даже без логотипа — работает геометрия.</span>
+      <span><b>Риск:</b> самая авторская из трёх, у банка может быть свой гайдлайн на срезы.</span>
+    </div>
+  </section>
+
+  <section class="pick">
+    <div>
+      <h3>Если для себя</h3>
+      <p>Берите первую. Вы открываете калькулятор с телефона, часто вечером, и смотрите в него подолгу — тёмный фон здесь практичнее, а не просто красивее.</p>
+    </div>
+    <div>
+      <h3>Если показывать банку</h3>
+      <p>Вторая говорит с ними на языке их же сайта: такую страницу легко представить в разделе «Кредиты» рядом с карточками продуктов. Меньше всего вопросов при согласовании.</p>
+    </div>
+    <div>
+      <h3>Если хочется впечатлить</h3>
+      <p>Третья. Она показывает, что вы разобрали их айдентику до уровня скруглений, а не просто взяли цвета. Но именно её вероятнее всего попросят «причесать» под гайдлайн.</p>
+    </div>
+    <div>
+      <h3>Что дальше</h3>
+      <p>Назовите номер — соберу калькулятор целиком в этом стиле: все экраны, график, мобильная вёрстка, светлая и тёмная темы. Расчётная часть не меняется, переписывается только оформление.</p>
+    </div>
+  </section>
+
+  <p class="note-legal">В концепциях использованы цвета и приёмы вёрстки с публичных страниц belveb.by для оценки совместимости со стилем банка. Логотип и фирменные знаки не воспроизводятся, макеты не являются продуктом Банка БелВЭБ и не выпущены от его имени.</p>
+</div>
