@@ -625,7 +625,7 @@ tr.final-row .cell{font-weight:600}
       <h2>График платежей</h2>
       <span class="eyebrow">нажмите год, чтобы раскрыть месяцы</span>
     </div>
-    <p class="ledger-legend"><b>«Проценты в платеже»</b> — сколько процентов вы реально отдаёте в этом месяце: 10 Br в льготные годы и 1 351,54 Br после них. <b>«Накоплено процентов»</b> — справочная колонка: начислено, но ещё не оплачено. Разовым платежом это гасить не нужно — сумма уже разложена по платежам после пятого года. Целиком она войдёт в платёж только если закрыть кредит досрочно.</p>
+    <p class="ledger-legend" id="ledger-legend"></p>
     <div class="ledger-scroll">
       <table>
         <thead>
@@ -647,11 +647,7 @@ tr.final-row .cell{font-weight:600}
   <section class="notes">
     <div class="note" id="note-accrual"></div>
     <div class="note" id="note-owed"></div>
-    <div class="note">
-      <h3>Что даёт досрочка</h3>
-      <p>Любая внесённая сверх графика сумма уменьшает основной долг — значит, дальше начисляется меньше процентов. Чем раньше платёж, тем сильнее эффект.</p>
-      <p>В льготный период размер платежа по телу закреплён договором (0,75 % от суммы кредита), поэтому досрочка там всегда работает на сокращение остатка, а выигрыш проявляется в платеже после пятого года.</p>
-    </div>
+    <div class="note" id="note-early"></div>
     <div class="note" id="note-grace">
       <h3>Зачем нужен льготный период</h3>
     </div>
@@ -1366,6 +1362,39 @@ tr.final-row .cell{font-weight:600}
     document.getElementById("note-grace").innerHTML = html;
   }
 
+  function renderLegend(base){
+    var afterGrace = base.rows[cfg.grace] || null;
+    var html = "";
+    if(cfg.grace > 0 && afterGrace){
+      html = "<b>«Проценты в платеже»</b> — сколько процентов вы реально отдаёте в этом месяце: " +
+        money(cfg.fix) + " Br в льготные годы и " + money(afterGrace.interest) + " Br после них. " +
+        "<b>«Накоплено процентов»</b> — справочная колонка: начислено, но ещё не оплачено. Разовым платежом " +
+        "это гасить не нужно — сумма уже разложена по платежам после льготного периода. Целиком она войдёт " +
+        "в платёж только если закрыть кредит досрочно.";
+    } else {
+      html = "<b>«Проценты в платеже»</b> — сколько процентов входит в платёж этого месяца: " +
+        money(base.rows[0].interest) + " Br в первом и дальше меньше вместе с остатком. " +
+        "<b>«Накоплено процентов»</b> — начислено, но ещё не оплачено: без льготного периода хвост почти не копится.";
+    }
+    document.getElementById("ledger-legend").innerHTML = html;
+  }
+
+  function renderEarlyNote(){
+    var html = "<h3>Что даёт досрочка</h3>";
+    html += "<p>Любая внесённая сверх графика сумма уменьшает основной долг — значит, дальше начисляется " +
+      "меньше процентов. Чем раньше платёж, тем сильнее эффект.</p>";
+    if(cfg.grace > 0){
+      html += "<p>В льготный период размер платежа по телу закреплён договором (" +
+        String(cfg.pct).replace(".", ",") + " % от суммы кредита, это " + money(cfg.amount*cfg.pct/100) +
+        " Br в месяц), поэтому досрочка там всегда работает на сокращение остатка, а выигрыш проявляется " +
+        "в платеже после льготного периода.</p>";
+    } else {
+      html += "<p>Льготного периода нет, поэтому досрочный взнос сразу отражается и на остатке, и на " +
+        "следующих платежах.</p>";
+    }
+    document.getElementById("note-early").innerHTML = html;
+  }
+
   function renderNotes(base){
     var rateTxt = String(cfg.rate).replace(".", ",");
     var first = base.rows[0];
@@ -1423,6 +1452,8 @@ tr.final-row .cell{font-weight:600}
     renderModes(byTerm, byPay, base);
     renderGraceNote(base);
     renderNotes(base);
+    renderLegend(base);
+    renderEarlyNote();
     lastCur = cur; lastBase = base;
     renderSummary(cur, base);
     renderLedger(cur);
