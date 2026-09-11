@@ -98,17 +98,47 @@ h1,h2,h3{margin:0; text-wrap:balance}
 .field label{font-size:12px; color:var(--muted); font-weight:500}
 .field input, .field select{
   font-family:inherit; font-variant-numeric:tabular-nums; font-size:15px; font-weight:500;
-  background:rgba(255,255,255,.05); color:var(--ink); border:1.5px solid rgba(255,255,255,.09);
+  background-color:rgba(255,255,255,.05); color:var(--ink); border:1.5px solid rgba(255,255,255,.09);
   border-radius:var(--r-field); padding:11px 14px; width:100%;
-  transition:border-color .18s, box-shadow .18s, background .18s;
+  transition:border-color .18s, box-shadow .18s, background-color .18s;
 }
 .field input:hover, .field select:hover{border-color:rgba(255,255,255,.2)}
 .field input:focus, .field select:focus{
-  outline:none; border-color:rgba(204,162,242,.65); background:rgba(147,64,222,.1);
+  outline:none; border-color:rgba(204,162,242,.65); background-color:rgba(147,64,222,.1);
   box-shadow:0 0 24px -6px rgba(147,64,222,.6);
 }
 .field select option{background:#14161E; color:var(--ink)}
 .field .hint{font-size:11.5px; color:var(--faint)}
+
+/* нативные стрелки браузера выбиваются из тёмной сцены — рисуем свои */
+.field select{
+  appearance:none; -webkit-appearance:none; padding-right:38px; cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.2 1.6 6 6.4l4.8-4.8' fill='none' stroke='%23A4A6AA' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 14px center; background-size:11px;
+}
+.field input[type="number"]{appearance:textfield; -moz-appearance:textfield; padding-right:66px}
+.field input[type="number"]::-webkit-outer-spin-button,
+.field input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+.field input[type="date"]::-webkit-calendar-picker-indicator{
+  filter:invert(1); opacity:.5; cursor:pointer; transition:opacity .15s;
+}
+.field input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1}
+
+.num-wrap{position:relative; display:block; width:100%}
+.stepper{position:absolute; right:7px; top:50%; transform:translateY(-50%); display:flex; gap:4px}
+.stepper button{
+  width:27px; height:27px; padding:0; border-radius:50%; cursor:pointer;
+  border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); color:var(--muted);
+  font:inherit; font-size:16px; font-weight:500; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  transition:border-color .15s, background .15s, color .15s, box-shadow .15s, transform .1s;
+}
+.stepper button:hover{
+  background:rgba(147,64,222,.3); border-color:rgba(204,162,242,.6); color:#fff;
+  box-shadow:0 0 18px -4px rgba(147,64,222,.95);
+}
+.stepper button:active{transform:scale(.9)}
+.stepper button:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
 
 .terms-foot{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px 18px;
   margin:0 26px 22px; padding:14px 18px; background:rgba(255,255,255,.035);
@@ -294,6 +324,9 @@ tr.final-row .cell{font-weight:600}
   .pay-body{padding:4px 18px 20px; gap:16px}
   .adder{padding:14px; gap:10px}
   .adder .field{flex:1 1 122px}
+  .field input[type="number"]{padding-right:60px}
+  .stepper{right:6px; gap:3px}
+  .stepper button{width:24px; height:24px; font-size:15px}
   .adder .btn{width:100%}
   .modes{grid-template-columns:1fr}
   .chart-wrap{padding:0 18px 18px}
@@ -370,7 +403,7 @@ tr.final-row .cell{font-weight:600}
     <div class="terms">
       <div class="field">
         <label for="f-amount">Сумма кредита</label>
-        <input id="f-amount" type="number" step="100" min="1" value="238000">
+        <input id="f-amount" type="number" step="100" min="100" value="238000">
         <span class="hint">Br, пункт 1.1</span>
       </div>
       <div class="field">
@@ -432,7 +465,7 @@ tr.final-row .cell{font-weight:600}
         </div>
         <div class="field" style="flex:0 1 150px">
           <label for="a-sum">Сумма, Br</label>
-          <input id="a-sum" type="number" step="50" min="1" value="5000">
+          <input id="a-sum" type="number" step="50" min="50" value="5000">
         </div>
         <div class="field">
           <label for="a-from">С платежа</label>
@@ -856,6 +889,38 @@ tr.final-row .cell{font-weight:600}
     from.value = prevFrom && +prevFrom <= cfg.term ? prevFrom : Math.min(cfg.term, 1);
     to.value = prevTo && +prevTo <= cfg.term ? prevTo : cfg.term;
   }
+  /* Свои кнопки вместо браузерных спиннеров. Шаг и границы берутся из самого
+     поля через stepUp/stepDown, поэтому каждое считает по своим правилам. */
+  function buildSteppers(){
+    var list = document.querySelectorAll('input[type="number"]');
+    for(var i = 0; i < list.length; i++){
+      (function(inp){
+        if(inp.parentNode && inp.parentNode.classList.contains("num-wrap")) return;
+        var wrap = document.createElement("span");
+        wrap.className = "num-wrap";
+        inp.parentNode.insertBefore(wrap, inp);
+        wrap.appendChild(inp);
+
+        var box = document.createElement("span");
+        box.className = "stepper";
+        box.innerHTML =
+          '<button type="button" tabindex="-1" data-step="down" aria-label="Уменьшить">−</button>' +
+          '<button type="button" tabindex="-1" data-step="up" aria-label="Увеличить">+</button>';
+        wrap.appendChild(box);
+
+        box.addEventListener("click", function(ev){
+          var b = ev.target.closest("button");
+          if(!b) return;
+          try{
+            if(b.getAttribute("data-step") === "up") inp.stepUp();
+            else inp.stepDown();
+          }catch(err){ return; }
+          inp.dispatchEvent(new Event("input", {bubbles:true}));
+        });
+      })(list[i]);
+    }
+  }
+
   function fillFields(){
     document.getElementById("f-amount").value = cfg.amount;
     document.getElementById("f-rate").value = cfg.rate;
@@ -1266,6 +1331,7 @@ tr.final-row .cell{font-weight:600}
   document.getElementById("mode-term").setAttribute("aria-checked", String(mode === "term"));
   document.getElementById("mode-pay").setAttribute("aria-checked", String(mode === "pay"));
   fillSelects();
+  buildSteppers();
   openYears[payDate(1).y] = true;
   refresh();
 })();
