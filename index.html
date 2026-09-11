@@ -14,7 +14,7 @@
   --indigo:#5B78FB; --indigo-lt:#8AA6FF;
   --green:#4FE3A5; --alert:#FF4D73;
   /* имена ниже читает отрисовка графика */
-  --accent:#8AA6FF; --interest:#CCA2F2; --positive:#4FE3A5;
+  --accent:#8AA6FF; --interest:#CCA2F2; --positive:#4FE3A5; --owed-line:#FF7BA6;
   --hairline:rgba(255,255,255,.1); --hairline-strong:rgba(255,255,255,.22);
   --r-card:26px; --r-panel:20px; --r-field:14px; --r-pill:100px;
   --focus:#CCA2F2;
@@ -299,6 +299,7 @@ h1,h2,h3{margin:0; text-wrap:balance}
 .empty{font-size:13px; color:var(--faint)}
 
 .mode-q{font-size:13.5px; color:var(--muted); margin:0}
+.mode-hint{margin:0; font-size:12.5px; line-height:1.5; color:var(--faint); max-width:92ch}
 .modes{display:grid; grid-template-columns:repeat(auto-fit,minmax(266px,1fr)); gap:14px}
 .mode-card{
   font:inherit; color:var(--ink); text-align:left; cursor:pointer; position:relative; overflow:hidden;
@@ -338,9 +339,9 @@ h1,h2,h3{margin:0; text-wrap:balance}
 .chart-legend{display:flex; flex-wrap:wrap; gap:18px; font-size:12.5px; color:var(--muted); margin-bottom:14px}
 .chart-legend span{display:flex; align-items:center; gap:8px}
 .swatch{width:16px; height:3px; border-radius:2px; flex:none;
-  background:linear-gradient(90deg,var(--violet),var(--indigo-lt)); box-shadow:0 0 10px rgba(138,166,255,.8)}
+  background:var(--accent); box-shadow:0 0 10px rgba(138,166,255,.75)}
 .swatch.dash{background:repeating-linear-gradient(90deg,var(--hairline-strong) 0 4px,transparent 4px 7px); box-shadow:none}
-.swatch.owed{background:var(--violet-lt); box-shadow:0 0 10px rgba(204,162,242,.8)}
+.swatch.owed{background:var(--owed-line); box-shadow:0 0 10px rgba(255,123,166,.75)}
 canvas{display:block; width:100%; height:240px}
 
 /* ── Ведомость ─────────────────────────── */
@@ -602,6 +603,7 @@ tr.final-row .cell{font-weight:600}
           <span class="mc-stats" id="stats-pay"></span>
         </button>
       </div>
+      <p class="mode-hint" id="mode-hint"></p>
     </div>
   </section>
 
@@ -936,7 +938,7 @@ tr.final-row .cell{font-weight:600}
 
     var cs = getComputedStyle(document.documentElement);
     var cAcc = cs.getPropertyValue("--accent").trim();
-    var cInt = cs.getPropertyValue("--interest").trim();
+    var cInt = cs.getPropertyValue("--owed-line").trim();
     var cLine = cs.getPropertyValue("--hairline").trim();
     var cStrong = cs.getPropertyValue("--hairline-strong").trim();
     var cMuted = cs.getPropertyValue("--faint").trim();
@@ -990,22 +992,40 @@ tr.final-row .cell{font-weight:600}
     path(cur.rows, true);
     g.fillStyle = fill; g.fill();
 
-    /* сама линия светится: градиент по горизонтали плюс мягкий ореол */
-    var line = g.createLinearGradient(padL, 0, w - padR, 0);
-    line.addColorStop(0, cInt);
-    line.addColorStop(1, cAcc);
     g.save();
-    g.shadowColor = "rgba(138,166,255,.9)"; g.shadowBlur = 16;
+    g.shadowColor = "rgba(138,166,255,.75)"; g.shadowBlur = 12;
     path(cur.rows, false);
-    g.strokeStyle = line; g.lineWidth = 2.4; g.lineJoin = "round"; g.stroke();
+    g.strokeStyle = cAcc; g.lineWidth = 2.6; g.lineJoin = "round"; g.stroke();
     g.restore();
 
     g.save();
-    g.shadowColor = "rgba(204,162,242,.75)"; g.shadowBlur = 12;
+    g.shadowColor = "rgba(255,123,166,.6)"; g.shadowBlur = 10;
     g.beginPath(); g.moveTo(X(0), Y(0));
     cur.rows.forEach(function(r){ g.lineTo(X(r.i), Y(r.owed)); });
-    g.strokeStyle = cInt; g.lineWidth = 1.6; g.stroke();
+    g.strokeStyle = cInt; g.lineWidth = 2; g.stroke();
     g.restore();
+
+    /* опорные вертикали: конец льготного периода объясняет излом, «сейчас» — где мы */
+    g.font = '10px "Onest", sans-serif';
+    function marker(idx, label, color){
+      if(idx <= 0 || idx > n) return;
+      var x = X(idx);
+      g.save();
+      g.setLineDash([3,4]);
+      g.strokeStyle = color; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(x, padT); g.lineTo(x, padT + ih); g.stroke();
+      g.restore();
+      g.fillStyle = color;
+      g.textAlign = x > padL + iw*0.8 ? "right" : "left";
+      g.textBaseline = "top";
+      g.fillText(label, x + (g.textAlign === "right" ? -5 : 5), padT + 1);
+    }
+    if(cfg.grace > 0 && cfg.grace < n) marker(cfg.grace, "конец льготных", "rgba(255,255,255,.35)");
+    var nowTs = startOfToday(), nowIdx = -1;
+    for(var q = 0; q < cur.rows.length; q++){
+      if(rowTs(cur.rows[q]) >= nowTs){ nowIdx = cur.rows[q].i; break; }
+    }
+    if(nowIdx > 0) marker(nowIdx, "сейчас", "rgba(204,162,242,.75)");
 
     var lr = cur.rows[cur.rows.length-1];
     g.save();
@@ -1324,6 +1344,7 @@ tr.final-row .cell{font-weight:600}
              (base.months - s.months > 0 ? ' <span style="color:var(--positive)">−' + (base.months - s.months) + ' мес.</span>' : "") + '</b></i>';
       out += '<i><span>' + (gl ? "Платёж после льготных" : "Ежемесячный платёж") + '</span><b>' +
              (p2 ? money(p2.payment - p2.extra) : "—") + ' Br</b></i>';
+      out += '<i><span>В нём тела кредита</span><b>' + (p2 ? money(p2.principal) : "—") + ' Br</b></i>';
       out += has
         ? '<i><span>Экономия на процентах</span><b class="win">' + fmt0.format(saved) + ' Br</b></i>'
         : '<i><span>Проценты за весь срок</span><b>' + fmt0.format(s.totalInterest) + ' Br</b></i>';
@@ -1331,6 +1352,17 @@ tr.final-row .cell{font-weight:600}
     }
     fill("stats-term", byTerm);
     fill("stats-pay", byPay);
+
+    var hint = document.getElementById("mode-hint");
+    if(!has){
+      hint.textContent = "Досрочных взносов пока нет, поэтому оба варианта дают один и тот же график — " +
+        "разница появится, как только вы добавите сумму выше.";
+    } else {
+      var savedMonths = base.months - byTerm.months;
+      hint.textContent = "Сокращение срока держит взнос по телу прежним (" + money(byTerm.phase2 ? byTerm.phase2.principal : 0) +
+        " Br) и просто заканчивает выплаты раньше — на " + savedMonths + " мес. Уменьшение платежа растягивает тот же остаток " +
+        "до последней даты по договору, поэтому взнос по телу падает до " + money(byPay.phase2 ? byPay.phase2.principal : 0) + " Br.";
+    }
   }
 
   /* ── Что даёт льготный период ───────── */
