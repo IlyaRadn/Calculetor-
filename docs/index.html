@@ -81,13 +81,14 @@ h1,h2,h3{margin:0; text-wrap:balance}
 .masthead h1 em{font-style:normal; background:linear-gradient(110deg,var(--violet-lt),var(--indigo-lt));
   -webkit-background-clip:text; background-clip:text; color:transparent;
   filter:drop-shadow(0 0 22px rgba(204,162,242,.45))}
-.sub{color:var(--muted); font-size:14px; max-width:54ch; margin-top:13px; line-height:1.55}
 .stamp{font-size:12.5px; color:var(--muted); text-align:right; line-height:1.9}
 .stamp b{color:var(--ink); font-weight:600}
 
 /* ── Карточки-секции ───────────────────── */
 .card{background:var(--surface); border:1px solid var(--hairline); border-radius:var(--r-card);
   backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); overflow:hidden}
+/* карточка условий не обрезает содержимое — из неё выпадает календарь */
+.card-terms{overflow:visible; position:relative; z-index:20}
 .card-head{display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 26px 14px}
 .card-head h2{font-size:17px; font-weight:600; letter-spacing:-.02em}
 .eyebrow{font-size:11.5px; color:var(--faint)}
@@ -123,6 +124,64 @@ h1,h2,h3{margin:0; text-wrap:balance}
   filter:invert(1); opacity:.5; cursor:pointer; transition:opacity .15s;
 }
 .field input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1}
+
+/* ── Поле даты и свой календарь ───────── */
+.date-field{position:relative; z-index:5}
+.date-wrap{position:relative; display:block; width:100%}
+.date-wrap input{padding-right:46px}
+.cal-btn{
+  position:absolute; right:8px; top:50%; transform:translateY(-50%);
+  width:30px; height:30px; padding:0; border-radius:50%; cursor:pointer;
+  border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); color:var(--muted);
+  display:flex; align-items:center; justify-content:center;
+  transition:border-color .15s, background .15s, color .15s, box-shadow .15s;
+}
+.cal-btn:hover, .cal-btn[aria-expanded="true"]{
+  background:rgba(147,64,222,.3); border-color:rgba(204,162,242,.6); color:#fff;
+  box-shadow:0 0 18px -4px rgba(147,64,222,.95);
+}
+.cal-btn:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+
+.calendar{
+  position:absolute; top:calc(100% + 10px); left:0; z-index:40; width:282px; padding:14px;
+  background:#151722; border:1px solid rgba(204,162,242,.28); border-radius:20px;
+  box-shadow:0 24px 60px -20px rgba(0,0,0,.9), 0 0 44px -18px rgba(147,64,222,.85);
+  animation:riseIn .18s ease-out;
+}
+.cal-head{display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:12px}
+.cal-title{font-size:14px; font-weight:600; letter-spacing:-.01em; text-align:center; flex:1}
+.cal-nav{display:flex; gap:4px}
+.cal-nav button{
+  width:26px; height:26px; padding:0; border-radius:50%; cursor:pointer; font:inherit; font-size:13px;
+  border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.05); color:var(--muted);
+  display:flex; align-items:center; justify-content:center; transition:background .15s, color .15s, border-color .15s;
+}
+.cal-nav button:hover{background:rgba(147,64,222,.32); border-color:rgba(204,162,242,.55); color:#fff}
+.cal-nav button:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+.cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:3px}
+.cal-grid span.dow{font-size:10.5px; color:var(--faint); text-align:center; padding:4px 0 6px; text-transform:uppercase}
+.cal-grid button{
+  aspect-ratio:1; padding:0; border:0; border-radius:50%; cursor:pointer; font:inherit; font-size:13px;
+  background:transparent; color:var(--ink); font-variant-numeric:tabular-nums;
+  display:flex; align-items:center; justify-content:center; transition:background .14s, color .14s, box-shadow .14s;
+}
+.cal-grid button.dim{color:var(--faint)}
+.cal-grid button:hover{background:rgba(255,255,255,.09)}
+.cal-grid button.today{box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)}
+.cal-grid button.on{
+  background:linear-gradient(140deg,var(--violet),var(--indigo)); color:#fff; font-weight:600;
+  box-shadow:0 0 20px -4px rgba(147,64,222,.95);
+}
+.cal-grid button:focus-visible{outline:2px solid var(--focus); outline-offset:1px}
+.cal-foot{display:flex; justify-content:space-between; align-items:center; gap:8px;
+  margin-top:12px; padding-top:11px; border-top:1px solid rgba(255,255,255,.09)}
+.cal-foot button{
+  font:inherit; font-size:12px; padding:7px 13px; border-radius:100px; cursor:pointer;
+  border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); color:var(--muted);
+  transition:background .15s, color .15s, border-color .15s;
+}
+.cal-foot button:hover{background:rgba(147,64,222,.3); border-color:rgba(204,162,242,.55); color:#fff}
+.cal-foot button:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
 
 .num-wrap{position:relative; display:block; width:100%}
 .stepper{position:absolute; right:7px; top:50%; transform:translateY(-50%); display:flex; gap:4px}
@@ -308,7 +367,6 @@ tr.final-row .cell{font-weight:600}
   .wrap{padding:26px 12px 64px; gap:16px}
   .masthead{flex-direction:column; align-items:flex-start; gap:12px; padding:0 2px 18px}
   .masthead h1{font-size:clamp(28px,8.5vw,38px)}
-  .sub{font-size:13.5px; margin-top:8px}
   .stamp{text-align:left; font-size:12px; line-height:1.75}
   body::before, body::after{filter:blur(54px)}
 
@@ -386,7 +444,6 @@ tr.final-row .cell{font-weight:600}
   <header class="masthead">
     <div>
       <h1>Кредитная <em>ведомость</em></h1>
-      <p class="sub">График по договору с льготным периодом: пять лет платится 0,75 % основного долга и фиксированные проценты, затем остаток и накопленные проценты раскидываются равными долями на оставшийся срок.</p>
     </div>
     <div class="stamp">
       Белорусские рубли<br>
@@ -395,16 +452,15 @@ tr.final-row .cell{font-weight:600}
     </div>
   </header>
 
-  <section class="card">
+  <section class="card card-terms">
     <div class="card-head">
       <h2>Условия договора</h2>
-      <span class="eyebrow">п. 1.1 · 1.6.3</span>
     </div>
     <div class="terms">
       <div class="field">
         <label for="f-amount">Сумма кредита</label>
         <input id="f-amount" type="number" step="100" min="100" value="238000">
-        <span class="hint">Br, пункт 1.1</span>
+        <span class="hint">белорусских рублей</span>
       </div>
       <div class="field">
         <label for="f-rate">Ставка, % годовых</label>
@@ -414,26 +470,38 @@ tr.final-row .cell{font-weight:600}
       <div class="field">
         <label for="f-term">Срок, месяцев</label>
         <input id="f-term" type="number" step="1" min="2" value="300">
-        <span class="hint">25 лет</span>
+        <span class="hint" id="hint-term">25 лет</span>
       </div>
       <div class="field">
         <label for="f-grace">Льготный период, мес.</label>
         <input id="f-grace" type="number" step="1" min="0" value="60">
-        <span class="hint">первые 5 лет</span>
+        <span class="hint" id="hint-grace">первые 5 лет</span>
       </div>
       <div class="field">
         <label for="f-pct">Долг в льготный, %</label>
         <input id="f-pct" type="number" step="0.05" min="0" value="0.75">
-        <span class="hint">от суммы п. 1.1</span>
+        <span class="hint">от суммы кредита</span>
       </div>
       <div class="field">
         <label for="f-fix">Проценты в льготный</label>
         <input id="f-fix" type="number" step="1" min="0" value="10">
         <span class="hint">Br в месяц</span>
       </div>
-      <div class="field">
+      <div class="field date-field">
         <label for="f-date">Первый платёж</label>
-        <input id="f-date" type="date" value="2026-09-26">
+        <span class="date-wrap">
+          <input id="f-date" type="text" inputmode="numeric" autocomplete="off"
+                 placeholder="дд.мм.гггг" value="26.09.2026">
+          <button type="button" class="cal-btn" id="cal-open" aria-label="Открыть календарь"
+                  aria-haspopup="dialog" aria-expanded="false">
+            <svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true">
+              <rect x="2.5" y="4" width="15" height="13.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M2.5 8.2h15M6.8 2.5v3M13.2 2.5v3" fill="none" stroke="currentColor"
+                    stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <div class="calendar" id="calendar" hidden role="dialog" aria-label="Выбор даты первого платежа"></div>
+        </span>
         <span class="hint">расчётная дата</span>
       </div>
     </div>
@@ -451,7 +519,6 @@ tr.final-row .cell{font-weight:600}
   <section class="card">
     <div class="card-head">
       <h2>Досрочное погашение</h2>
-      <span class="eyebrow">п. 1.6.6</span>
     </div>
     <div class="pay-body">
       <p class="adder-hint">Введённая сумма <b>добавляется к платежу этого месяца</b> и сразу уменьшает основной долг — дальше проценты начисляются на меньший остаток.</p>
@@ -674,6 +741,20 @@ tr.final-row .cell{font-weight:600}
   }
 
   /* ── Сводка ─────────────────────────── */
+  function yearsWord(y){
+    var t = y % 100, d = y % 10;
+    if(t > 10 && t < 20) return "лет";
+    if(d === 1) return "год";
+    if(d >= 2 && d <= 4) return "года";
+    return "лет";
+  }
+  function spanLabel(n){
+    var y = Math.floor(n/12), m = n % 12;
+    if(y === 0) return n + " мес.";
+    if(m === 0) return y + " " + yearsWord(y);
+    return y + " " + yearsWord(y) + " " + m + " мес.";
+  }
+
   function graceSpan(){
     if(cfg.grace <= 0) return null;
     return cfg.grace % 12 === 0 ? cfg.grace/12 + " г. / " + cfg.grace + " мес." : cfg.grace + " мес.";
@@ -921,6 +1002,121 @@ tr.final-row .cell{font-weight:600}
     }
   }
 
+  /* ── Свой календарь вместо браузерного ────────────────────────────────
+     Нативный datepicker не поддаётся стилизации, поэтому поле стало
+     текстовым: дату можно набрать как дд.мм.гггг или выбрать в попапе. */
+  var MON_FULL = ["Январь","Февраль","Март","Апрель","Май","Июнь",
+                  "Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+  var DOW = ["пн","вт","ср","чт","пт","сб","вс"];
+  var calBox = document.getElementById("calendar");
+  var calBtn = document.getElementById("cal-open");
+  var dateInp = document.getElementById("f-date");
+  var calY, calM;
+
+  function pad2(n){ return n < 10 ? "0" + n : String(n); }
+  function isoToText(iso){
+    var p = iso.split("-");
+    return p[2] + "." + p[1] + "." + p[0];
+  }
+  function textToIso(txt){
+    var m = /^(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})$/.exec(txt.trim());
+    if(!m) return null;
+    var d = +m[1], mo = +m[2], y = +m[3];
+    if(mo < 1 || mo > 12 || d < 1 || y < 1900 || y > 2200) return null;
+    if(d > new Date(y, mo, 0).getDate()) return null;
+    return y + "-" + pad2(mo) + "-" + pad2(d);
+  }
+
+  function renderCalendar(){
+    var sel = cfg.first.split("-");
+    var selY = +sel[0], selM = +sel[1] - 1, selD = +sel[2];
+    var now = new Date();
+    var first = new Date(calY, calM, 1);
+    var shift = (first.getDay() + 6) % 7;          // неделя начинается с понедельника
+    var days = new Date(calY, calM + 1, 0).getDate();
+    var prevDays = new Date(calY, calM, 0).getDate();
+
+    var html = '<div class="cal-head">' +
+      '<span class="cal-nav"><button type="button" data-go="-12" aria-label="Год назад">«</button>' +
+      '<button type="button" data-go="-1" aria-label="Месяц назад">‹</button></span>' +
+      '<span class="cal-title">' + MON_FULL[calM] + " " + calY + '</span>' +
+      '<span class="cal-nav"><button type="button" data-go="1" aria-label="Месяц вперёд">›</button>' +
+      '<button type="button" data-go="12" aria-label="Год вперёд">»</button></span></div>';
+
+    html += '<div class="cal-grid">';
+    DOW.forEach(function(d){ html += '<span class="dow">' + d + "</span>"; });
+    for(var i = shift; i > 0; i--){
+      html += '<button type="button" class="dim" data-off="-1" data-d="' + (prevDays - i + 1) + '">' + (prevDays - i + 1) + "</button>";
+    }
+    for(var d2 = 1; d2 <= days; d2++){
+      var cls = [];
+      if(calY === selY && calM === selM && d2 === selD) cls.push("on");
+      if(calY === now.getFullYear() && calM === now.getMonth() && d2 === now.getDate()) cls.push("today");
+      html += '<button type="button" class="' + cls.join(" ") + '" data-off="0" data-d="' + d2 + '">' + d2 + "</button>";
+    }
+    var tail = (7 - ((shift + days) % 7)) % 7;
+    for(var t = 1; t <= tail; t++){
+      html += '<button type="button" class="dim" data-off="1" data-d="' + t + '">' + t + "</button>";
+    }
+    html += "</div>";
+
+    html += '<div class="cal-foot"><button type="button" data-pick="today">Сегодня</button>' +
+            '<button type="button" data-pick="close">Закрыть</button></div>';
+    calBox.innerHTML = html;
+  }
+
+  function openCal(){
+    var p = cfg.first.split("-");
+    calY = +p[0]; calM = +p[1] - 1;
+    renderCalendar();
+    calBox.hidden = false;
+    calBtn.setAttribute("aria-expanded", "true");
+  }
+  function closeCal(){
+    calBox.hidden = true;
+    calBtn.setAttribute("aria-expanded", "false");
+  }
+  function pickDate(iso){
+    cfg.first = iso;
+    dateInp.value = isoToText(iso);
+    fillSelects();
+    refresh();
+    closeCal();
+  }
+
+  calBtn.addEventListener("click", function(){
+    if(calBox.hidden) openCal(); else closeCal();
+  });
+  calBox.addEventListener("click", function(ev){
+    var b = ev.target.closest("button");
+    if(!b) return;
+    if(b.hasAttribute("data-go")){
+      var t = calM + (+b.getAttribute("data-go"));
+      calY += Math.floor(t/12);
+      calM = ((t % 12) + 12) % 12;
+      renderCalendar();
+      return;
+    }
+    if(b.getAttribute("data-pick") === "close"){ closeCal(); return; }
+    if(b.getAttribute("data-pick") === "today"){
+      var n = new Date();
+      pickDate(n.getFullYear() + "-" + pad2(n.getMonth()+1) + "-" + pad2(n.getDate()));
+      return;
+    }
+    if(b.hasAttribute("data-d")){
+      var t2 = calM + (+b.getAttribute("data-off"));
+      var y2 = calY + Math.floor(t2/12), m2 = ((t2 % 12) + 12) % 12;
+      pickDate(y2 + "-" + pad2(m2 + 1) + "-" + pad2(+b.getAttribute("data-d")));
+    }
+  });
+  document.addEventListener("click", function(ev){
+    if(calBox.hidden) return;
+    if(!ev.target.closest(".date-field")) closeCal();
+  });
+  document.addEventListener("keydown", function(ev){
+    if(ev.key === "Escape" && !calBox.hidden){ closeCal(); calBtn.focus(); }
+  });
+
   function fillFields(){
     document.getElementById("f-amount").value = cfg.amount;
     document.getElementById("f-rate").value = cfg.rate;
@@ -928,7 +1124,7 @@ tr.final-row .cell{font-weight:600}
     document.getElementById("f-grace").value = cfg.grace;
     document.getElementById("f-pct").value = cfg.pct;
     document.getElementById("f-fix").value = cfg.fix;
-    document.getElementById("f-date").value = cfg.first;
+    document.getElementById("f-date").value = isoToText(cfg.first);
   }
 
   function renderChips(){
@@ -1017,7 +1213,7 @@ tr.final-row .cell{font-weight:600}
     var b = "<h3>Накопленные проценты</h3>";
     if(atGrace && afterGrace){
       b += "<p>К концу льготного периода накапливается " + fmt0.format(atGrace.owed) +
-        " Br неуплаченных процентов. Именно они по п. 1.6.3.2 делятся на оставшиеся " + rest +
+        " Br неуплаченных процентов. Именно они делятся на оставшиеся " + rest +
         " месяцев и дают " + money(afterGrace.interest) + " Br в платеже.</p>";
     } else {
       b += "<p>Без льготного периода проценты платятся сразу и большой хвост не накапливается.</p>";
@@ -1040,6 +1236,10 @@ tr.final-row .cell{font-weight:600}
   function refresh(){
     document.getElementById("stamp-rate").textContent = String(cfg.rate).replace(".", ",") + " %";
     document.getElementById("stamp-term").textContent = cfg.term + " платежей";
+    document.getElementById("hint-term").textContent = spanLabel(cfg.term);
+    document.getElementById("hint-grace").textContent = cfg.grace <= 0
+      ? "без льготного периода"
+      : (cfg.grace === 12 ? "первый год" : "первые " + spanLabel(cfg.grace));
 
     var base = build(false, "term");
     var byTerm = build(true, "term");
@@ -1147,8 +1347,9 @@ tr.final-row .cell{font-weight:600}
     el.addEventListener("input", function(){
       var key = fieldMap[id];
       if(key === "first"){
-        if(!/^\d{4}-\d{2}-\d{2}$/.test(el.value)) return;
-        cfg.first = el.value;
+        var iso = textToIso(el.value);
+        if(!iso) return;
+        cfg.first = iso;
       } else {
         var v = parseFloat(el.value);
         if(isNaN(v) || v < 0) return;
