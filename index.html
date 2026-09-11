@@ -83,6 +83,18 @@ h1,h2,h3{margin:0; text-wrap:balance}
 .field input:focus, .field select:focus{outline:none; border-color:var(--accent); background:var(--card)}
 .field .hint{font-size:11.5px; color:var(--faint)}
 
+.terms-foot{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px 18px;
+  margin:0 26px 22px; padding:14px 18px; background:var(--panel); border-radius:var(--r-panel)}
+.save-note{font-size:12.5px; color:var(--muted); line-height:1.45; max-width:56ch}
+.save-note.ok{color:var(--positive); font-weight:500}
+.save-note.warn{color:var(--alert)}
+.foot-actions{display:flex; flex-wrap:wrap; gap:8px}
+.btn.sm{font-size:12.5px; padding:9px 16px}
+.btn.ghost.sm{background:var(--card); border-color:transparent}
+.btn.ghost.sm:hover{border-color:var(--hairline-strong)}
+.btn.sm.armed{background:var(--alert); color:#FFFFFF; border-color:transparent}
+.btn.sm.armed:hover{border-color:transparent}
+
 /* ── Сводка: градиентные плитки ────────── */
 .summary{display:grid; grid-template-columns:repeat(auto-fit,minmax(196px,1fr)); gap:14px}
 .kpi{background:var(--card); border:1px solid var(--hairline); border-radius:var(--r-panel);
@@ -343,6 +355,13 @@ tr.final-row .cell{font-weight:600}
         <span class="hint">расчётная дата</span>
       </div>
     </div>
+    <div class="terms-foot">
+      <span class="save-note" id="save-note">Всё, что вы меняете, сохраняется в этом браузере — при следующем открытии расчёт будет на месте.</span>
+      <div class="foot-actions">
+        <button class="btn ghost sm" type="button" id="btn-share">Скопировать ссылку на расчёт</button>
+        <button class="btn ghost sm" type="button" id="btn-reset">Сбросить</button>
+      </div>
+    </div>
   </section>
 
   <section class="summary" id="summary"></section>
@@ -460,6 +479,8 @@ tr.final-row .cell{font-weight:600}
   function round(v){ return Math.round(v*100)/100; }
 
   var cfg = {amount:238000, rate:14.5, term:300, grace:60, pct:0.75, fix:10, first:"2026-09-26"};
+  var DEFAULTS = {amount:cfg.amount, rate:cfg.rate, term:cfg.term, grace:cfg.grace,
+                  pct:cfg.pct, fix:cfg.fix, first:cfg.first};
   var extras = [];
   var mode = "term";
   var openYears = {};
@@ -768,6 +789,16 @@ tr.final-row .cell{font-weight:600}
     from.value = prevFrom && +prevFrom <= cfg.term ? prevFrom : Math.min(cfg.term, 1);
     to.value = prevTo && +prevTo <= cfg.term ? prevTo : cfg.term;
   }
+  function fillFields(){
+    document.getElementById("f-amount").value = cfg.amount;
+    document.getElementById("f-rate").value = cfg.rate;
+    document.getElementById("f-term").value = cfg.term;
+    document.getElementById("f-grace").value = cfg.grace;
+    document.getElementById("f-pct").value = cfg.pct;
+    document.getElementById("f-fix").value = cfg.fix;
+    document.getElementById("f-date").value = cfg.first;
+  }
+
   function renderChips(){
     var box = document.getElementById("chips");
     if(!extras.length){ box.innerHTML = '<span class="empty">Досрочных платежей нет — показан график по договору.</span>'; return; }
@@ -899,12 +930,38 @@ tr.final-row .cell{font-weight:600}
     }catch(err){}
   }
   /* Параметры в ссылке: ?amount=100000&rate=14.5&term=300&grace=60&pct=0.75&fix=10&first=2027-01-26
-     Позволяет открыть калькулятор сразу с нужными условиями — например, дать клиенту
-     ссылку на его продукт. Значения из ссылки имеют приоритет над сохранёнными. */
+     Досрочные платежи: &ex=o_12_5000~m_24_120_200 (разовый и ежемесячный).
+     Ссылка задаёт условия один раз при открытии — дальше расчёт живёт в браузере,
+     поэтому после применения адресная строка очищается. */
+  var FIELDS = ["amount","rate","term","grace","pct","fix"];
+
+  function encodeExtras(){
+    return extras.map(function(e){
+      return e.kind === "once"
+        ? "o_" + e.from + "_" + e.sum
+        : "m_" + e.from + "_" + e.to + "_" + e.sum;
+    }).join("~");
+  }
+  function decodeExtras(str){
+    var out = [];
+    str.split("~").forEach(function(part){
+      var p = part.split("_");
+      if(p[0] === "o" && p.length === 3){
+        var f = parseInt(p[1], 10), s = parseFloat(p[2]);
+        if(f > 0 && s > 0) out.push({id:seq++, kind:"once", sum:s, from:f, to:f});
+      } else if(p[0] === "m" && p.length === 4){
+        var f2 = parseInt(p[1], 10), t = parseInt(p[2], 10), s2 = parseFloat(p[3]);
+        if(f2 > 0 && t >= f2 && s2 > 0) out.push({id:seq++, kind:"monthly", sum:s2, from:f2, to:t});
+      }
+    });
+    return out;
+  }
+
   function applyQuery(){
     try{
       var q = new URLSearchParams(location.search);
-      ["amount","rate","term","grace","pct","fix"].forEach(function(k){
+      if(!q.toString()) return;
+      FIELDS.forEach(function(k){
         if(!q.has(k)) return;
         var v = parseFloat(q.get(k));
         if(!isNaN(v) && v >= 0) cfg[k] = v;
@@ -915,7 +972,26 @@ tr.final-row .cell{font-weight:600}
       if(m === "pay" || m === "term") mode = m;
       if(cfg.term < 2) cfg.term = 2;
       if(cfg.grace > cfg.term - 1) cfg.grace = cfg.term - 1;
+      var ex = q.get("ex");
+      if(ex) extras = decodeExtras(ex);
+      cleanUrl();
     }catch(err){}
+  }
+
+  /* при открытии файла напрямую origin равен null и replaceState бросает SecurityError */
+  function cleanUrl(){
+    try{
+      if(history.replaceState) history.replaceState(null, "", location.pathname + location.hash);
+    }catch(err){}
+  }
+
+  function shareUrl(){
+    var q = [];
+    FIELDS.forEach(function(k){ q.push(k + "=" + cfg[k]); });
+    q.push("first=" + cfg.first);
+    q.push("mode=" + mode);
+    if(extras.length) q.push("ex=" + encodeExtras());
+    return location.origin + location.pathname + "?" + q.join("&");
   }
 
   function load(){
@@ -983,6 +1059,75 @@ tr.final-row .cell{font-weight:600}
     refresh();
   });
 
+  /* ── Ссылка на расчёт и сброс ───────── */
+  var noteEl = document.getElementById("save-note");
+  var noteBase = noteEl.textContent;
+  var noteTimer = null;
+  function flash(text, kind){
+    clearTimeout(noteTimer);
+    noteEl.textContent = text;
+    noteEl.className = "save-note" + (kind ? " " + kind : "");
+    noteTimer = setTimeout(function(){
+      noteEl.textContent = noteBase;
+      noteEl.className = "save-note";
+    }, 4000);
+  }
+
+  document.getElementById("btn-share").addEventListener("click", function(){
+    var url = shareUrl();
+    var done = function(){ flash("Ссылка скопирована — откройте её на другом устройстве, условия подставятся сами.", "ok"); };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(done, function(){ fallbackCopy(url, done); });
+    } else {
+      fallbackCopy(url, done);
+    }
+  });
+  function fallbackCopy(text, done){
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try{ ok = document.execCommand("copy"); }catch(err){}
+    document.body.removeChild(ta);
+    if(ok) done();
+    else flash("Скопировать не вышло — браузер запретил доступ к буферу. Ссылка с условиями в адресной строке после перезагрузки.", "warn");
+  }
+
+  var resetBtn = document.getElementById("btn-reset");
+  var resetArmed = false;
+  var resetTimer = null;
+  resetBtn.addEventListener("click", function(){
+    if(!resetArmed){
+      resetArmed = true;
+      resetBtn.textContent = "Точно сбросить?";
+      resetBtn.classList.add("armed");
+      flash("Вернём условия по умолчанию и удалим досрочные платежи. Нажмите ещё раз, чтобы подтвердить.", "warn");
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(disarmReset, 5000);
+      return;
+    }
+    disarmReset();
+    for(var k in DEFAULTS){ if(Object.prototype.hasOwnProperty.call(DEFAULTS, k)) cfg[k] = DEFAULTS[k]; }
+    extras = [];
+    mode = "term";
+    try{ localStorage.removeItem("credit-ledger"); }catch(err){}
+    cleanUrl();
+    fillFields();
+    fillSelects();
+    setMode("term");
+    flash("Условия сброшены к исходным.", "ok");
+  });
+  function disarmReset(){
+    clearTimeout(resetTimer);
+    resetArmed = false;
+    resetBtn.textContent = "Сбросить";
+    resetBtn.classList.remove("armed");
+  }
+
   function setMode(m){
     mode = m;
     document.getElementById("mode-term").setAttribute("aria-checked", String(m === "term"));
@@ -1020,13 +1165,7 @@ tr.final-row .cell{font-weight:600}
   /* ── Старт ──────────────────────────── */
   load();
   applyQuery();
-  document.getElementById("f-amount").value = cfg.amount;
-  document.getElementById("f-rate").value = cfg.rate;
-  document.getElementById("f-term").value = cfg.term;
-  document.getElementById("f-grace").value = cfg.grace;
-  document.getElementById("f-pct").value = cfg.pct;
-  document.getElementById("f-fix").value = cfg.fix;
-  document.getElementById("f-date").value = cfg.first;
+  fillFields();
   document.getElementById("mode-term").setAttribute("aria-checked", String(mode === "term"));
   document.getElementById("mode-pay").setAttribute("aria-checked", String(mode === "pay"));
   fillSelects();
