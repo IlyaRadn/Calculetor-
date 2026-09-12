@@ -1,0 +1,322 @@
+<title>Три спокойных варианта</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* ── Рамка страницы ─────────────────────────────────────────────── */
+:root{
+  --page:#F2F3F5; --card:#FFFFFF; --ink:#12141A; --muted:#5C606B; --faint:#8A8E99;
+  --rule:#E2E4E9; --rule-2:#CBCFD7;
+}
+:root[data-ui="dark"]{
+  --page:#0D0E12; --card:#15171C; --ink:#F1F2F5; --muted:#9CA1AC; --faint:#6E7480;
+  --rule:#23262D; --rule-2:#343841;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--page); color:var(--ink);
+  font-family:"Onest",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:15px; line-height:1.5;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px; margin:0 auto; padding:40px 22px 88px; display:flex; flex-direction:column; gap:30px}
+h1,h2,h3,h4{margin:0; text-wrap:balance}
+
+.top{display:flex; flex-wrap:wrap; gap:18px; align-items:flex-end; justify-content:space-between;
+  padding-bottom:22px; border-bottom:1px solid var(--rule-2)}
+.top h1{font-size:clamp(28px,4.2vw,40px); font-weight:600; letter-spacing:-.03em; line-height:1.08}
+.top p{margin:10px 0 0; color:var(--muted); font-size:14px; max-width:64ch}
+.switch{display:flex; gap:0; border:1px solid var(--rule-2); border-radius:100px; overflow:hidden; flex:none}
+.switch button{font:inherit; font-size:13px; padding:9px 18px; border:0; cursor:pointer;
+  background:var(--card); color:var(--muted); transition:background .15s, color .15s}
+.switch button[aria-pressed="true"]{background:var(--ink); color:var(--card)}
+
+.concept{background:var(--card); border:1px solid var(--rule); border-radius:10px; overflow:hidden}
+.c-head{display:flex; flex-wrap:wrap; gap:14px 24px; align-items:flex-start; justify-content:space-between;
+  padding:22px 24px; border-bottom:1px solid var(--rule)}
+.c-name{display:flex; align-items:baseline; gap:11px}
+.c-num{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--faint)}
+.c-name h2{font-size:22px; font-weight:600; letter-spacing:-.025em}
+.c-head p{margin:7px 0 0; color:var(--muted); font-size:13.5px; max-width:62ch; line-height:1.55}
+.sw-row{display:flex; gap:5px; margin-top:12px}
+.sw-row i{width:24px; height:24px; border-radius:5px; display:block; border:1px solid rgba(128,128,128,.25)}
+.verdict{display:flex; flex-wrap:wrap; gap:8px 20px; padding:14px 24px; border-top:1px solid var(--rule);
+  font-size:12.5px; color:var(--muted)}
+.verdict b{color:var(--ink); font-weight:600}
+.mock{padding:24px; overflow-x:auto}
+.mock-in{min-width:620px; border-radius:10px; overflow:hidden}
+.tn{font-variant-numeric:tabular-nums}
+.m-kpis{display:grid; grid-template-columns:repeat(4,1fr)}
+.m-table{width:100%; border-collapse:collapse; font-size:12.5px}
+.m-table th{font-size:11px; font-weight:500; text-align:right; padding:9px 12px; white-space:nowrap}
+.m-table th:first-child{text-align:left}
+.m-table td{padding:10px 12px; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap}
+.m-table td:first-child{text-align:left}
+
+/* ═══ A — Выписка ════════════════════════════════════════════════ */
+.cA{--bg:#FFFFFF; --pan:#F4F5F7; --bd:#E3E5EA; --tx:#12141A; --mu:#6A6E7A; --fa:#9498A3;
+  --ac:#2F4BDE; --ac-soft:#EDF0FE; --pos:#0E8F63; --warn:#B4590F;
+  background:var(--bg); color:var(--tx); padding:0}
+[data-ui="dark"] .cA{--bg:#0F1115; --pan:#171A21; --bd:#262A33; --tx:#F2F3F6; --mu:#9AA0AC; --fa:#6E7480;
+  --ac:#7C93FF; --ac-soft:#1A2033; --pos:#3ECF9A; --warn:#E0A155}
+.cA .hd{display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; justify-content:space-between;
+  padding:22px 24px; border-bottom:1px solid var(--bd)}
+.cA .hd h3{font-size:19px; font-weight:600; letter-spacing:-.02em}
+.cA .hd span{display:block; color:var(--mu); font-size:12.5px; margin-top:6px}
+.cA .btn{font:inherit; font-size:13px; padding:10px 18px; border-radius:8px; border:0; cursor:default;
+  background:var(--ac); color:#fff}
+.cA .m-kpis{border-bottom:1px solid var(--bd)}
+.cA .kpi{padding:16px 20px; border-right:1px solid var(--bd)}
+.cA .kpi:last-child{border-right:0}
+.cA .kpi em{font-style:normal; font-size:11.5px; color:var(--mu)}
+.cA .kpi strong{display:block; margin-top:8px; font-size:22px; font-weight:600; letter-spacing:-.03em}
+.cA .kpi.lead strong{color:var(--ac)}
+.cA .kpi small{display:block; margin-top:4px; font-size:11px; color:var(--fa)}
+.cA .m-table{margin:0}
+.cA .m-table th{color:var(--mu); border-bottom:1px solid var(--bd); background:var(--bg)}
+.cA .m-table td{border-bottom:1px solid var(--bd)}
+.cA .m-table tr.yr td{background:var(--pan); font-weight:600}
+.cA .m-table tr.now td{background:var(--ac-soft)}
+.cA .vA{color:var(--ac)}
+.cA .vB{color:var(--warn)}
+.cA .vC{color:var(--fa)}
+
+/* ═══ B — Карточки ═══════════════════════════════════════════════ */
+.cB{--bg:#F7F7FA; --card2:#FFFFFF; --bd:#EAEAF0; --tx:#14121C; --mu:#63607A; --fa:#918DA6;
+  --ac:#7B2FD4; --t1:#F0E8FC; --t2:#E6F0FD; --t3:#EAF2EE; --pos:#0E8F63;
+  background:var(--bg); color:var(--tx); padding:22px}
+[data-ui="dark"] .cB{--bg:#101218; --card2:#191C24; --bd:#262A34; --tx:#F2F1F7; --mu:#9C98AE; --fa:#6F6B82;
+  --ac:#B07BF0; --t1:#241B36; --t2:#182338; --t3:#16251F}
+.cB .hd{display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; margin-bottom:18px}
+.cB .hd h3{font-size:20px; font-weight:600; letter-spacing:-.025em}
+.cB .pill{font-size:12px; padding:7px 14px; border-radius:100px; background:var(--card2); color:var(--mu);
+  border:1px solid var(--bd)}
+.cB .m-kpis{grid-template-columns:repeat(4,1fr); gap:10px}
+.cB .kpi{padding:16px 18px; border-radius:18px; background:var(--card2); border:1px solid var(--bd)}
+.cB .kpi.t1{background:var(--t1); border-color:transparent}
+.cB .kpi.t2{background:var(--t2); border-color:transparent}
+.cB .kpi em{font-style:normal; font-size:11.5px; color:var(--mu)}
+.cB .kpi strong{display:block; margin-top:9px; font-size:21px; font-weight:600; letter-spacing:-.03em}
+.cB .kpi.t1 strong{color:var(--ac)}
+.cB .kpi small{display:block; margin-top:4px; font-size:11px; color:var(--fa)}
+.cB .panel{margin-top:16px; background:var(--card2); border:1px solid var(--bd); border-radius:20px; overflow:hidden}
+.cB .panel h4{font-size:13.5px; font-weight:600; padding:15px 18px 11px}
+.cB .m-table th{color:var(--mu); border-bottom:1px solid var(--bd)}
+.cB .m-table td{border-bottom:1px solid var(--bd)}
+.cB .m-table tr:last-child td{border-bottom:0}
+.cB .m-table tr.yr td{background:var(--bg); font-weight:600}
+.cB .m-table tr.now td{background:var(--t1)}
+.cB .vA{color:var(--ac)}
+.cB .vB{color:var(--mu)}
+.cB .vC{color:var(--fa)}
+
+/* ═══ C — Документ ═══════════════════════════════════════════════ */
+.cC{--bg:#FCFCFD; --bd:#E6E7EB; --bd2:#0E1014; --tx:#0E1014; --mu:#61656F; --fa:#93969F;
+  --ac:#C8102E; --ac2:#1F3A93;
+  background:var(--bg); color:var(--tx); padding:26px 24px; font-feature-settings:"tnum"}
+[data-ui="dark"] .cC{--bg:#0C0D11; --bd:#23252C; --bd2:#E9EAEE; --tx:#E9EAEE; --mu:#989CA6; --fa:#6B6F79;
+  --ac:#FF5C77; --ac2:#8AA0F0}
+.cC .hd{display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:flex-end;
+  padding-bottom:16px; border-bottom:2px solid var(--bd2)}
+.cC .hd .lab{font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--fa)}
+.cC .hd h3{font-size:21px; font-weight:600; letter-spacing:-.02em; margin-top:8px}
+.cC .hd .meta{font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--mu); text-align:right; line-height:1.8}
+.cC .m-kpis{grid-template-columns:repeat(4,1fr); border-bottom:1px solid var(--bd)}
+.cC .kpi{padding:16px 18px 16px 0; border-right:1px solid var(--bd)}
+.cC .kpi:not(:first-child){padding-left:18px}
+.cC .kpi:last-child{border-right:0}
+.cC .kpi em{font-style:normal; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--fa)}
+.cC .kpi strong{display:block; margin-top:10px; font-family:"IBM Plex Mono",monospace; font-size:19px; font-weight:500}
+.cC .kpi.lead strong{color:var(--ac)}
+.cC .kpi small{display:block; margin-top:5px; font-size:11px; color:var(--mu)}
+.cC .m-table{font-family:"IBM Plex Mono",monospace; font-size:12px}
+.cC .m-table th{font-family:"Onest",sans-serif; color:var(--fa); border-bottom:1px solid var(--bd2);
+  text-transform:uppercase; letter-spacing:.06em; font-size:10px}
+.cC .m-table td{border-bottom:1px solid var(--bd); padding:9px 12px}
+.cC .m-table td:first-child{font-family:"Onest",sans-serif}
+.cC .m-table tr.yr td{font-weight:600; border-bottom:1px solid var(--bd2)}
+.cC .m-table tr.now td{box-shadow:inset 2px 0 0 var(--ac)}
+.cC .vA{color:var(--ac2)}
+.cC .vB{color:var(--mu)}
+.cC .vC{color:var(--fa)}
+
+.pick{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px 30px;
+  padding-top:24px; border-top:1px solid var(--rule-2)}
+.pick h3{font-size:12px; letter-spacing:.05em; text-transform:uppercase; margin-bottom:8px}
+.pick p{margin:0; font-size:13px; color:var(--muted); line-height:1.55}
+@media (max-width:720px){
+  .wrap{padding:24px 13px 60px; gap:22px}
+  .c-head{padding:18px; flex-direction:column}
+  .mock{padding:13px}
+  .cB,.cC{padding:16px 14px}
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Три спокойных варианта</h1>
+      <p>Без свечений и кислоты: те же цвета БелВЭБ, но работают как банковский инструмент, а не как реклама. Каждый вариант сразу в двух темах — переключите тумблер справа, мокапы перерисуются. По умолчанию светлая, как вы просили.</p>
+    </div>
+    <div class="switch" role="group" aria-label="Тема">
+      <button type="button" id="ui-light" aria-pressed="true">Светлая</button>
+      <button type="button" id="ui-dark" aria-pressed="false">Тёмная</button>
+    </div>
+  </header>
+
+  <!-- ═══ A ═══ -->
+  <section class="concept">
+    <div class="c-head">
+      <div>
+        <div class="c-name"><span class="c-num">A</span><h2>Выписка</h2></div>
+        <p>Строгий банковский документ. Никаких заливок и теней — только сетка, тонкие линейки и один акцентный цвет на главной сумме. Плитки стоят в ряд одной полосой, как строки отчёта. Максимум данных на экран, ничего не отвлекает.</p>
+        <div class="sw-row">
+          <i style="background:#FFFFFF"></i><i style="background:#F4F5F7"></i><i style="background:#2F4BDE"></i>
+          <i style="background:#0E8F63"></i><i style="background:#12141A"></i>
+        </div>
+      </div>
+    </div>
+    <div class="mock">
+      <div class="mock-in cA">
+        <div class="hd">
+          <div><h3>Кредитная ведомость</h3><span>238 000 Br · 14,5 % годовых · 300 платежей до 26 августа 2051</span></div>
+          <button class="btn">Внести досрочно</button>
+        </div>
+        <div class="m-kpis">
+          <div class="kpi lead"><em>Платёж сейчас</em><strong class="tn">1 795,00</strong><small>1 785,00 долг + 10,00 проценты</small></div>
+          <div class="kpi"><em>После льготных</em><strong class="tn">1 896,95</strong><small>с 26 сентября 2031</small></div>
+          <div class="kpi"><em>Проценты за срок</em><strong class="tn">324 969</strong><small>137 % от тела</small></div>
+          <div class="kpi"><em>Всего выплат</em><strong class="tn">562 969</strong><small>тело плюс проценты</small></div>
+        </div>
+        <table class="m-table">
+          <thead><tr><th>Период</th><th>Основной долг</th><th>Проценты</th><th>Платёж</th><th>Остаток долга</th></tr></thead>
+          <tbody>
+            <tr class="yr"><td>2026 · 4 платежа</td><td class="vA">7 140,00</td><td class="vB">40,00</td><td>7 180,00</td><td>230 860,00</td></tr>
+            <tr class="now"><td>26 сен 2026</td><td class="vA">1 785,00</td><td class="vB">10,00</td><td>1 795,00</td><td>236 215,00</td></tr>
+            <tr><td>26 окт 2026</td><td class="vA">1 785,00</td><td class="vB">10,00</td><td>1 795,00</td><td>234 430,00</td></tr>
+            <tr><td>26 ноя 2026</td><td class="vA">1 785,00</td><td class="vB">10,00</td><td>1 795,00</td><td>232 645,00</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="verdict">
+      <span><b>Сильная сторона:</b> цифры читаются быстрее всего, и лист нормально печатается.</span>
+      <span><b>Риск:</b> выглядит суховато — это отчёт, а не продукт.</span>
+    </div>
+  </section>
+
+  <!-- ═══ B ═══ -->
+  <section class="concept">
+    <div class="c-head">
+      <div>
+        <div class="c-name"><span class="c-num">B</span><h2>Карточки</h2></div>
+        <p>Логика главной страницы банка, но без градиентов: те же сиреневый и голубой взяты как спокойные пастельные заливки. Скругления 18–20 px, мягкие границы вместо теней. Дружелюбно и всё ещё сдержанно — золотая середина между отчётом и витриной.</p>
+        <div class="sw-row">
+          <i style="background:#F7F7FA"></i><i style="background:#F0E8FC"></i><i style="background:#E6F0FD"></i>
+          <i style="background:#7B2FD4"></i><i style="background:#14121C"></i>
+        </div>
+      </div>
+    </div>
+    <div class="mock">
+      <div class="mock-in cB">
+        <div class="hd">
+          <h3>Кредит на 25 лет</h3>
+          <span class="pill">Льготный период · 5 лет</span>
+        </div>
+        <div class="m-kpis">
+          <div class="kpi t1"><em>Платёж сейчас</em><strong class="tn">1 795,00</strong><small>первые пять лет</small></div>
+          <div class="kpi t2"><em>После льготных</em><strong class="tn">1 896,95</strong><small>с сентября 2031</small></div>
+          <div class="kpi"><em>Проценты за срок</em><strong class="tn">324 969</strong><small>137 % от тела</small></div>
+          <div class="kpi"><em>Всего выплат</em><strong class="tn">562 969</strong><small>тело плюс проценты</small></div>
+        </div>
+        <div class="panel">
+          <h4>График платежей</h4>
+          <table class="m-table">
+            <thead><tr><th>Период</th><th>Основной долг</th><th>Проценты</th><th>Платёж</th><th>Остаток долга</th></tr></thead>
+            <tbody>
+              <tr class="yr"><td>2026 · 4 платежа</td><td class="vA">7 140,00</td><td class="vB">40,00</td><td>7 180,00</td><td>230 860,00</td></tr>
+              <tr class="now"><td>26 сен 2026</td><td class="vA">1 785,00</td><td class="vB">10,00</td><td>1 795,00</td><td>236 215,00</td></tr>
+              <tr><td>26 окт 2026</td><td class="vA">1 785,00</td><td class="vB">10,00</td><td>1 795,00</td><td>234 430,00</td></tr>
+              <tr><td>26 ноя 2026</td><td class="vA">1 785,00</td><td class="vB">10,00</td><td>1 795,00</td><td>232 645,00</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="verdict">
+      <span><b>Сильная сторона:</b> узнаётся как БелВЭБ и не устаёт глаз при долгом чтении таблицы.</span>
+      <span><b>Риск:</b> пастель на тёмной теме теряет силу — нужна аккуратная настройка.</span>
+    </div>
+  </section>
+
+  <!-- ═══ C ═══ -->
+  <section class="concept">
+    <div class="c-head">
+      <div>
+        <div class="c-name"><span class="c-num">C</span><h2>Документ</h2></div>
+        <p>Ставка на цифры: моноширинный шрифт в суммах, жирная линейка под шапкой, заглавные подписи через разрядку. Цвет появляется дважды — малиновый на текущей строке и синий в основном долге. Похоже на распечатку из банковской системы, только аккуратную.</p>
+        <div class="sw-row">
+          <i style="background:#FCFCFD"></i><i style="background:#0E1014"></i><i style="background:#C8102E"></i>
+          <i style="background:#1F3A93"></i><i style="background:#E6E7EB"></i>
+        </div>
+      </div>
+    </div>
+    <div class="mock">
+      <div class="mock-in cC">
+        <div class="hd">
+          <div><span class="lab">Кредитный договор</span><h3>Ведомость платежей</h3></div>
+          <div class="meta">238 000 BYN · 14,5 %<br>300 платежей · до 26.08.2051</div>
+        </div>
+        <div class="m-kpis">
+          <div class="kpi lead"><em>Платёж сейчас</em><strong>1 795,00</strong><small>1 785,00 + 10,00</small></div>
+          <div class="kpi"><em>После льготных</em><strong>1 896,95</strong><small>с 26.09.2031</small></div>
+          <div class="kpi"><em>Проценты</em><strong>324 969</strong><small>137 % от тела</small></div>
+          <div class="kpi"><em>Всего выплат</em><strong>562 969</strong><small>тело + проценты</small></div>
+        </div>
+        <table class="m-table">
+          <thead><tr><th>Период</th><th>Основной долг</th><th>Проценты</th><th>Платёж</th><th>Остаток долга</th></tr></thead>
+          <tbody>
+            <tr class="yr"><td>2026 · 4 платежа</td><td class="vA">7 140,00</td><td class="vB">40,00</td><td>7 180,00</td><td>230 860,00</td></tr>
+            <tr class="now"><td>26 сен 2026</td><td class="vA">1 785,00</td><td class="vB">10,00</td><td>1 795,00</td><td>236 215,00</td></tr>
+            <tr><td>26 окт 2026</td><td class="vA">1 785,00</td><td class="vB">10,00</td><td>1 795,00</td><td>234 430,00</td></tr>
+            <tr><td>26 ноя 2026</td><td class="vA">1 785,00</td><td class="vB">10,00</td><td>1 795,00</td><td>232 645,00</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="verdict">
+      <span><b>Сильная сторона:</b> ни одной лишней детали, суммы выстроены разряд в разряд.</span>
+      <span><b>Риск:</b> моноширинный шрифт делает страницу холодной, на телефоне цифры мельчают.</span>
+    </div>
+  </section>
+
+  <section class="pick">
+    <div>
+      <h3>Если для себя</h3>
+      <p>Берите B. Пастельные плитки удерживают внимание на двух главных суммах, а таблицу можно листать долго и не устать.</p>
+    </div>
+    <div>
+      <h3>Если показывать банку</h3>
+      <p>A. Это язык, на котором они сами разговаривают с клиентом: сетка, линейки, никакой самодеятельности.</p>
+    </div>
+    <div>
+      <h3>Если нужна точность</h3>
+      <p>C. Моноширинные суммы выравниваются разряд в разряд — ошибку в цифре видно сразу, это ценно при сверке с договором.</p>
+    </div>
+    <div>
+      <h3>Что дальше</h3>
+      <p>Назовите букву — переделаю калькулятор целиком: обе темы, светлая по умолчанию, вся мобильная вёрстка. Расчёты не трогаю.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  var L = document.getElementById("ui-light"), D = document.getElementById("ui-dark");
+  function set(mode){
+    document.documentElement.setAttribute("data-ui", mode);
+    L.setAttribute("aria-pressed", String(mode === "light"));
+    D.setAttribute("aria-pressed", String(mode === "dark"));
+  }
+  L.addEventListener("click", function(){ set("light"); });
+  D.addEventListener("click", function(){ set("dark"); });
+  set("light");
+})();
+</script>
