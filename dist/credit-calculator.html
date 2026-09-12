@@ -121,7 +121,8 @@ h1,h2,h3{margin:0; text-wrap:balance}
 .fx-btn[aria-pressed="true"]{background:var(--accent); color:#fff}
 .fx-btn:disabled{opacity:.4; cursor:not-allowed}
 .fx-btn:focus-visible{outline:2px solid var(--focus); outline-offset:-2px}
-.fx-note{font-size:11px; color:var(--faint); text-align:right; line-height:1.35; max-width:32ch}
+.fx-note{font-size:11px; color:var(--faint); text-align:right; line-height:1.35; max-width:34ch}
+.fx-note .nowrap{white-space:nowrap}
 .theme-btn{
   width:40px; height:40px; padding:0; border-radius:50%; cursor:pointer; flex:none;
   border:1px solid var(--edge-2); background:var(--soft); color:var(--muted);
@@ -632,7 +633,7 @@ tr.final-row .cell{font-weight:600}
       <div class="field">
         <label for="f-amount">Сумма кредита</label>
         <input id="f-amount" type="number" step="100" min="100" value="238000">
-        <span class="hint">белорусских рублей</span>
+        <span class="hint" id="hint-amount">белорусских рублей</span>
       </div>
       <div class="field">
         <label for="f-rate">Ставка, % годовых</label>
@@ -657,7 +658,7 @@ tr.final-row .cell{font-weight:600}
       <div class="field grace-field">
         <label for="f-fix">Проценты в льготный</label>
         <input id="f-fix" type="number" step="1" min="0" value="10">
-        <span class="hint">Br в месяц</span>
+        <span class="hint" id="hint-fix">Br в месяц</span>
       </div>
       <div class="field date-field">
         <label for="f-date">Первый платёж</label>
@@ -703,7 +704,7 @@ tr.final-row .cell{font-weight:600}
           </select>
         </div>
         <div class="field" style="flex:0 1 150px">
-          <label for="a-sum">Сумма, Br</label>
+          <label for="a-sum" id="label-sum">Сумма, Br</label>
           <input id="a-sum" type="number" step="50" min="50" value="5000">
         </div>
         <div class="field">
@@ -797,6 +798,14 @@ tr.final-row .cell{font-weight:600}
   /* Расчёт всегда в белорусских рублях — договор в них. Валюта меняет только
      отображение: суммы делятся на курс Нацбанка, взятый на сегодня. */
   var CURRENCIES = {BYN:"Br", USD:"$", EUR:"\u20AC", RUB:"\u20BD"};
+  var CUR_NAMES = {BYN:"белорусских рублей", USD:"долларов США", EUR:"евро", RUB:"российских рублей"};
+  /* шаг стрелок в единицах выбранной валюты; min кратен шагу, иначе сетка съезжает */
+  var CUR_STEPS = {
+    BYN:{amount:100, fix:1,   extra:50},
+    USD:{amount:50,  fix:1,   extra:20},
+    EUR:{amount:50,  fix:1,   extra:20},
+    RUB:{amount:5000, fix:50, extra:1000}
+  };
   var fxCode = "BYN";
   var fxRates = null;
   var fxDate = "";
@@ -952,8 +961,8 @@ tr.final-row .cell{font-weight:600}
     var d = cur - base;
     if(Math.abs(d) < 0.5) return '<span class="delta zero">без изменений</span>';
     var good = invert ? d > 0 : d < 0;
-    var sign = d < 0 ? "−" : "+";
-    return '<span class="delta' + (good ? "" : " up") + '">' + sign + money(Math.abs(d)) + " " + sign() + "</span>";
+    var mark = d < 0 ? "−" : "+";   // не sign: так называется функция знака валюты
+    return '<span class="delta' + (good ? "" : " up") + '">' + mark + money(Math.abs(d)) + " " + sign() + "</span>";
   }
 
   function renderSummary(cur, base){
@@ -1246,22 +1255,29 @@ tr.final-row .cell{font-weight:600}
     if(fxCode === "BYN"){
       fxNote.textContent = fxRates
         ? "Суммы в белорусских рублях"
-        : "Курсы Нацбанка недоступны — только рубли";
+        : "Курсы НБРБ недоступны — только рубли";
       return;
     }
     var r = fxRates && fxRates[fxCode];
     if(!r){ fxNote.textContent = "Курс недоступен"; return; }
     var per = r.scale === 1 ? "1 " + sign() : r.scale + " " + sign();
-    fxNote.textContent = "Курс Нацбанка на " + isoToText(fxDate) + ": " +
-      fmt4.format(r.rate) + " Br за " + per;
+    /* курс и единицу не рвём переносом — иначе знак валюты уезжает на свою строку */
+    fxNote.innerHTML = "Курс НБРБ " + isoToText(fxDate) + " · <span class=\"nowrap\">" +
+      fmt4.format(r.rate) + " Br за " + per + "</span>";
   }
   function applyFx(code){
     if(code !== "BYN" && !(fxRates && fxRates[code])) return;
+    /* черновик суммы досрочки держим в рублях, чтобы смысл введённого не поехал */
+    var draftEl = document.getElementById("a-sum");
+    var draftByn = fromField(parseFloat(draftEl.value));
     fxCode = code;
+    if(!isNaN(draftByn)) draftEl.value = toField(draftByn);
     for(var i = 0; i < fxButtons.length; i++){
       fxButtons[i].setAttribute("aria-pressed", String(fxButtons[i].getAttribute("data-cur") === code));
     }
     try{ localStorage.setItem("credit-fx", code); }catch(err){}
+    applyFieldUnits();
+    fillFields();
     renderFxNote();
     refresh();
     flashKpis();
@@ -1642,13 +1658,32 @@ tr.final-row .cell{font-weight:600}
     flashKpis();
   });
 
+  function toField(v){ return Math.round(v * fxFactor() * 100) / 100; }
+  function fromField(v){ return v / fxFactor(); }
+
+  /* единицы измерения полей: подписи и шаг стрелок следуют за валютой */
+  function applyFieldUnits(){
+    var st = CUR_STEPS[fxCode] || CUR_STEPS.BYN;
+    var amount = document.getElementById("f-amount");
+    amount.step = st.amount;
+    amount.min = st.amount;
+    var fix = document.getElementById("f-fix");
+    fix.step = st.fix;
+    var extra = document.getElementById("a-sum");
+    extra.step = st.extra;
+    extra.min = st.extra;
+    document.getElementById("hint-amount").textContent = CUR_NAMES[fxCode];
+    document.getElementById("hint-fix").textContent = sign() + " в месяц";
+    document.getElementById("label-sum").textContent = "Сумма, " + sign();
+  }
+
   function fillFields(){
-    document.getElementById("f-amount").value = cfg.amount;
+    document.getElementById("f-amount").value = toField(cfg.amount);
     document.getElementById("f-rate").value = cfg.rate;
     document.getElementById("f-term").value = cfg.term;
     document.getElementById("f-grace").value = cfg.grace;
     document.getElementById("f-pct").value = cfg.pct;
-    document.getElementById("f-fix").value = cfg.fix;
+    document.getElementById("f-fix").value = toField(cfg.fix);
     document.getElementById("f-date").value = isoToText(cfg.first);
   }
 
@@ -1937,7 +1972,7 @@ tr.final-row .cell{font-weight:600}
         if(isNaN(v) || v < 0) return;
         if(key === "term" && v < 2) return;
         if(key === "amount" && v <= 0) return;
-        cfg[key] = v;
+        cfg[key] = (key === "amount" || key === "fix") ? fromField(v) : v;
       }
       if(cfg.grace > cfg.term - 1){
         cfg.grace = cfg.term - 1;
@@ -1957,7 +1992,7 @@ tr.final-row .cell{font-weight:600}
 
   document.getElementById("a-add").addEventListener("click", function(){
     var kind = document.getElementById("a-kind").value;
-    var sum = parseFloat(document.getElementById("a-sum").value);
+    var sum = fromField(parseFloat(document.getElementById("a-sum").value));
     var from = parseInt(document.getElementById("a-from").value, 10);
     var to = parseInt(document.getElementById("a-to").value, 10);
     if(isNaN(sum) || sum <= 0) return;
@@ -2112,6 +2147,7 @@ tr.final-row .cell{font-weight:600}
   /* ── Старт ──────────────────────────── */
   load();
   applyQuery();
+  applyFieldUnits();
   fillFields();
   syncGraceFields();
   document.getElementById("mode-term").setAttribute("aria-checked", String(mode === "term"));
