@@ -113,6 +113,19 @@ h1,h2,h3{margin:0; text-wrap:balance}
 .masthead{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:16px 22px;
   padding:0 4px 28px; animation:riseIn .6s ease-out}
 .masthead-side{display:flex; align-items:center; gap:16px}
+.fx{display:flex; flex-direction:column; align-items:flex-end; gap:5px}
+.fx-row{display:flex; border:1px solid var(--edge-2); border-radius:var(--r-pill); overflow:hidden}
+.fx-btn{
+  font:inherit; font-size:13px; font-weight:500; min-width:36px; padding:7px 10px; cursor:pointer;
+  border:0; border-right:1px solid var(--edge-2); background:var(--surface); color:var(--muted);
+  transition:background .15s, color .15s;
+}
+.fx-btn:last-child{border-right:0}
+.fx-btn:hover:not(:disabled){background:var(--soft-2); color:var(--ink)}
+.fx-btn[aria-pressed="true"]{background:var(--accent); color:#fff}
+.fx-btn:disabled{opacity:.4; cursor:not-allowed}
+.fx-btn:focus-visible{outline:2px solid var(--focus); outline-offset:-2px}
+.fx-note{font-size:11px; color:var(--faint); text-align:right; line-height:1.35; max-width:32ch}
 .theme-btn{
   width:40px; height:40px; padding:0; border-radius:50%; cursor:pointer; flex:none;
   border:1px solid var(--edge-2); background:var(--soft); color:var(--muted);
@@ -492,7 +505,9 @@ tr.final-row .cell{font-weight:600}
 @media (max-width:720px){
   .wrap{padding:26px 12px 64px; gap:16px}
   .masthead{flex-direction:column; align-items:flex-start; gap:14px; padding:0 2px 18px}
-  .masthead-side{width:100%; justify-content:space-between; gap:12px}
+  .masthead-side{width:100%; justify-content:space-between; gap:12px; flex-wrap:wrap}
+  .fx{align-items:flex-start; order:3; width:100%}
+  .fx-note{text-align:left; max-width:100%}
   .masthead h1{font-size:clamp(28px,8.5vw,38px)}
   .stamp{text-align:left; font-size:12px; line-height:1.75}
 
@@ -576,6 +591,15 @@ tr.final-row .cell{font-weight:600}
       <h1>Кредитная <em>ведомость</em></h1>
     </div>
     <div class="masthead-side">
+    <div class="fx">
+      <div class="fx-row" role="group" aria-label="Валюта отображения">
+        <button type="button" class="fx-btn" data-cur="BYN" aria-pressed="true">Br</button>
+        <button type="button" class="fx-btn" data-cur="USD" aria-pressed="false">$</button>
+        <button type="button" class="fx-btn" data-cur="EUR" aria-pressed="false">€</button>
+        <button type="button" class="fx-btn" data-cur="RUB" aria-pressed="false">₽</button>
+      </div>
+      <span class="fx-note" id="fx-note"></span>
+    </div>
     <div class="stamp">
       Белорусские рубли<br>
       <b id="stamp-rate">14,5 %</b> годовых · база 360/30<br>
@@ -764,7 +788,7 @@ tr.final-row .cell{font-weight:600}
     <div class="note" id="note-final"></div>
   </section>
 
-  <p class="disclaimer">Расчёт справочный. Он воспроизводит формулы договора, но не является офертой, официальным графиком платежей или консультацией. Точные суммы к уплате подтверждает кредитодатель.</p>
+  <p class="disclaimer" id="disclaimer">Расчёт справочный. Он воспроизводит формулы договора, но не является офертой, официальным графиком платежей или консультацией. Точные суммы к уплате подтверждает кредитодатель.</p>
 </div>
 
 <script>
@@ -773,7 +797,22 @@ tr.final-row .cell{font-weight:600}
   var MON = ["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
   var fmt2 = new Intl.NumberFormat("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2});
   var fmt0 = new Intl.NumberFormat("ru-RU",{maximumFractionDigits:0});
-  function money(v){ return fmt2.format(Math.round(v*100)/100); }
+  var fmt4 = new Intl.NumberFormat("ru-RU",{minimumFractionDigits:4,maximumFractionDigits:4});
+  /* Расчёт всегда в белорусских рублях — договор в них. Валюта меняет только
+     отображение: суммы делятся на курс Нацбанка, взятый на сегодня. */
+  var CURRENCIES = {BYN:"Br", USD:"$", EUR:"\u20AC", RUB:"\u20BD"};
+  var fxCode = "BYN";
+  var fxRates = null;
+  var fxDate = "";
+
+  function fxFactor(){
+    if(fxCode === "BYN") return 1;
+    var r = fxRates && fxRates[fxCode];
+    return r ? r.scale / r.rate : 1;
+  }
+  function sign(){ return CURRENCIES[fxCode] || "Br"; }
+  function money(v){ return fmt2.format(Math.round(v*fxFactor()*100)/100); }
+  function moneyRound(v){ return fmt0.format(v*fxFactor()); }
   function round(v){ return Math.round(v*100)/100; }
 
   var cfg = {amount:238000, rate:14.5, term:300, grace:60, pct:0.75, fix:10, first:"2026-09-26"};
@@ -918,7 +957,7 @@ tr.final-row .cell{font-weight:600}
     if(Math.abs(d) < 0.5) return '<span class="delta zero">без изменений</span>';
     var good = invert ? d > 0 : d < 0;
     var sign = d < 0 ? "−" : "+";
-    return '<span class="delta' + (good ? "" : " up") + '">' + sign + money(Math.abs(d)) + " Br</span>";
+    return '<span class="delta' + (good ? "" : " up") + '">' + sign + money(Math.abs(d)) + " " + sign() + "</span>";
   }
 
   function renderSummary(cur, base){
@@ -929,26 +968,26 @@ tr.final-row .cell{font-weight:600}
 
     var gl = graceSpan();
     html += '<div class="kpi is-hero g1"><span class="k-label">' + (gl ? "Платёж в льготный период" : "Ежемесячный платёж") + '</span>' +
-      '<span class="k-val">' + money(cur.rows[0] ? cur.rows[0].payment - cur.rows[0].extra : 0) + ' <small>Br</small></span>' +
+      '<span class="k-val">' + money(cur.rows[0] ? cur.rows[0].payment - cur.rows[0].extra : 0) + ' <small>' + sign() + '</small></span>' +
       '<span class="k-note">' + (gl
         ? gl + ": " + money(cfg.amount*cfg.pct/100) + ' долг + ' + money(cfg.fix) + ' проценты'
         : money(cur.rows[0].principal) + ' долг + ' + money(cur.rows[0].interest) + ' проценты') + '</span></div>';
 
     if(gl){
       html += '<div class="kpi g2"><span class="k-label">Платёж после льготного периода</span>' +
-        '<span class="k-val">' + (p2 ? money(p2.payment - p2.extra) : "—") + ' <small>Br</small></span>' +
+        '<span class="k-val">' + (p2 ? money(p2.payment - p2.extra) : "—") + ' <small>' + sign() + '</small></span>' +
         (p2 && bp2 ? deltaHTML(p2.payment - p2.extra, bp2.payment - bp2.extra) : '<span class="k-note">—</span>') + '</div>';
     }
 
     html += '<div class="kpi"><span class="k-label">Проценты за весь срок</span>' +
-      '<span class="k-val">' + fmt0.format(cur.totalInterest) + ' <small>Br</small></span>' +
+      '<span class="k-val">' + moneyRound(cur.totalInterest) + ' <small>' + sign() + '</small></span>' +
       (hasExtra ? deltaHTML(cur.totalInterest, base.totalInterest)
                 : '<span class="k-note">' + Math.round(cur.totalInterest/cfg.amount*100) + ' % от тела кредита</span>') + '</div>';
 
     html += '<div class="kpi"><span class="k-label">Всего выплат</span>' +
-      '<span class="k-val">' + fmt0.format(cur.totalPaid) + ' <small>Br</small></span>' +
-      (hasExtra ? '<span class="k-note">из них досрочно ' + fmt0.format(cur.totalExtra) + ' Br</span>'
-                : '<span class="k-note">тело ' + fmt0.format(cfg.amount) + ' Br + проценты</span>') + '</div>';
+      '<span class="k-val">' + moneyRound(cur.totalPaid) + ' <small>' + sign() + '</small></span>' +
+      (hasExtra ? '<span class="k-note">из них досрочно ' + moneyRound(cur.totalExtra) + ' ' + sign() + '</span>'
+                : '<span class="k-note">тело ' + moneyRound(cfg.amount) + ' ' + sign() + ' + проценты</span>') + '</div>';
 
     var prev = cur.rows[cur.rows.length-2];
     var bigTail = prev && cur.last.payment > prev.payment * 1.3;
@@ -957,7 +996,7 @@ tr.final-row .cell{font-weight:600}
       (savedMonths > 0
         ? '<span class="delta">− ' + savedMonths + ' мес. (' + (savedMonths/12).toFixed(1).replace('.', ',') + ' года)</span>'
         : '<span class="k-note">' + cur.months + ' платежей</span>') +
-      (bigTail ? '<span class="k-note">закрывающий платёж ' + fmt0.format(cur.last.payment) + ' Br — в нём весь остаток процентов</span>' : "") +
+      (bigTail ? '<span class="k-note">закрывающий платёж ' + moneyRound(cur.last.payment) + ' ' + sign() + ' — в нём весь остаток процентов</span>' : "") +
       '</div>';
 
     document.getElementById("summary").innerHTML = html;
@@ -1189,6 +1228,97 @@ tr.final-row .cell{font-weight:600}
     }
   }
 
+  /* ── Курсы Нацбанка ───────────────────────────────────────────────────
+     Расчёт живёт в белорусских рублях; валюта — только способ посмотреть
+     на те же суммы. Курс берём один раз в сутки и держим в браузере, чтобы
+     не дёргать сервер на каждое открытие. Нет сети — остаёмся в рублях. */
+  var FX_URL = "https://api.nbrb.by/exrates/rates?periodicity=0";
+  var FX_KEY = "nbrb-rates";
+  var fxNote = document.getElementById("fx-note");
+  var fxButtons = document.querySelectorAll(".fx-btn");
+
+  function todayKey(){
+    var d = new Date();
+    return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate());
+  }
+  function setFxEnabled(on){
+    for(var i = 0; i < fxButtons.length; i++){
+      if(fxButtons[i].getAttribute("data-cur") !== "BYN") fxButtons[i].disabled = !on;
+    }
+  }
+  function renderFxNote(){
+    if(fxCode === "BYN"){
+      fxNote.textContent = fxRates
+        ? "Суммы в белорусских рублях"
+        : "Курсы Нацбанка недоступны — только рубли";
+      return;
+    }
+    var r = fxRates && fxRates[fxCode];
+    if(!r){ fxNote.textContent = "Курс недоступен"; return; }
+    var per = r.scale === 1 ? "1 " + sign() : r.scale + " " + sign();
+    fxNote.textContent = "Курс Нацбанка на " + isoToText(fxDate) + ": " +
+      fmt4.format(r.rate) + " Br за " + per;
+  }
+  function applyFx(code){
+    if(code !== "BYN" && !(fxRates && fxRates[code])) return;
+    fxCode = code;
+    for(var i = 0; i < fxButtons.length; i++){
+      fxButtons[i].setAttribute("aria-pressed", String(fxButtons[i].getAttribute("data-cur") === code));
+    }
+    try{ localStorage.setItem("credit-fx", code); }catch(err){}
+    renderFxNote();
+    refresh();
+    flashKpis();
+  }
+  function useRates(rates, date){
+    fxRates = rates;
+    fxDate = date;
+    setFxEnabled(true);
+    var saved = null;
+    try{ saved = localStorage.getItem("credit-fx"); }catch(err){}
+    if(saved && saved !== "BYN" && rates[saved]) applyFx(saved);
+    else renderFxNote();
+  }
+  function loadRates(){
+    setFxEnabled(false);
+    fxNote.textContent = "Загружаем курсы Нацбанка…";
+    var cached = null;
+    try{ cached = JSON.parse(localStorage.getItem(FX_KEY) || "null"); }catch(err){}
+    if(cached && cached.day === todayKey() && cached.rates){
+      useRates(cached.rates, cached.date);
+      return;
+    }
+    fetch(FX_URL)
+      .then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.json(); })
+      .then(function(list){
+        var want = {USD:1, EUR:1, RUB:1}, rates = {}, date = "";
+        for(var i = 0; i < list.length; i++){
+          var c = list[i];
+          if(want[c.Cur_Abbreviation]){
+            rates[c.Cur_Abbreviation] = {rate:c.Cur_OfficialRate, scale:c.Cur_Scale};
+            date = String(c.Date).slice(0, 10);
+          }
+        }
+        if(!rates.USD) throw new Error("нет курсов");
+        try{ localStorage.setItem(FX_KEY, JSON.stringify({day:todayKey(), date:date, rates:rates})); }catch(err){}
+        useRates(rates, date);
+      })
+      .catch(function(){
+        if(cached && cached.rates){          // сеть отпала — работаем на вчерашних
+          useRates(cached.rates, cached.date);
+          return;
+        }
+        fxRates = null;
+        setFxEnabled(false);
+        renderFxNote();
+      });
+  }
+
+  document.querySelector(".fx-row").addEventListener("click", function(ev){
+    var b = ev.target.closest(".fx-btn");
+    if(b && !b.disabled) applyFx(b.getAttribute("data-cur"));
+  });
+
   /* ── Подсказка про льготный период ──────────────────────────────────── */
   var helpBtn = document.getElementById("grace-help");
   var helpPop = document.getElementById("grace-help-pop");
@@ -1200,8 +1330,8 @@ tr.final-row .cell{font-weight:600}
       "а не по обычному графику.</p>";
     if(cfg.grace > 0){
       html += "<p>В эти " + cfg.grace + " мес. вы отдаёте <b>" + String(cfg.pct).replace(".", ",") +
-        " % от суммы кредита</b> в счёт тела — это " + money(graceP) + " Br, почти вдвое больше обычных " +
-        money(evenP) + " Br. Процентов при этом платите всего " + money(cfg.fix) + " Br.</p>";
+        " % от суммы кредита</b> в счёт тела — это " + money(graceP) + " " + sign() + ", почти вдвое больше обычных " +
+        money(evenP) + " " + sign() + ". Процентов при этом платите всего " + money(cfg.fix) + " " + sign() + ".</p>";
       html += "<p>Начисляются они полностью, поэтому разница копится и после периода делится на оставшиеся месяцы. " +
         "Тело гасится быстрее — за это и отсрочка.</p>";
     } else {
@@ -1533,7 +1663,7 @@ tr.final-row .cell{font-weight:600}
       var when = e.kind === "once"
         ? "разово · " + shortLabel(payDate(e.from))
         : "ежемесячно · " + shortLabel(payDate(e.from)) + " — " + shortLabel(payDate(e.to));
-      return '<span class="chip"><span class="c-sum">+' + fmt0.format(e.sum) + ' Br</span>' +
+      return '<span class="chip"><span class="c-sum">+' + moneyRound(e.sum) + ' ' + sign() + '</span>' +
              '<span class="c-when">' + when + '</span>' +
              '<button type="button" data-id="' + e.id + '" aria-label="Удалить досрочный платёж">×</button></span>';
     }).join("") + '<button class="btn ghost" type="button" id="clear-all">Очистить всё</button>';
@@ -1551,11 +1681,11 @@ tr.final-row .cell{font-weight:600}
       out += '<i><span>Закрытие кредита</span><b>' + dateLabel(s.last.date) +
              (base.months - s.months > 0 ? ' <span style="color:var(--positive)">−' + (base.months - s.months) + ' мес.</span>' : "") + '</b></i>';
       out += '<i><span>' + (gl ? "Платёж после льготных" : "Ежемесячный платёж") + '</span><b>' +
-             (p2 ? money(p2.payment - p2.extra) : "—") + ' Br</b></i>';
-      out += '<i><span>В нём тела кредита</span><b>' + (p2 ? money(p2.principal) : "—") + ' Br</b></i>';
+             (p2 ? money(p2.payment - p2.extra) : "—") + ' ' + sign() + '</b></i>';
+      out += '<i><span>В нём тела кредита</span><b>' + (p2 ? money(p2.principal) : "—") + ' ' + sign() + '</b></i>';
       out += has
-        ? '<i><span>Экономия на процентах</span><b class="win">' + fmt0.format(saved) + ' Br</b></i>'
-        : '<i><span>Проценты за весь срок</span><b>' + fmt0.format(s.totalInterest) + ' Br</b></i>';
+        ? '<i><span>Экономия на процентах</span><b class="win">' + moneyRound(saved) + ' ' + sign() + '</b></i>'
+        : '<i><span>Проценты за весь срок</span><b>' + fmt0.format(s.totalInterest) + ' ' + sign() + '</b></i>';
       document.getElementById(id).innerHTML = out;
     }
     fill("stats-term", byTerm);
@@ -1568,8 +1698,8 @@ tr.final-row .cell{font-weight:600}
     } else {
       var savedMonths = base.months - byTerm.months;
       hint.textContent = "Уменьшение платежа растягивает остаток до последней даты по договору: взнос по телу падает до " +
-        money(byPay.phase2 ? byPay.phase2.principal : 0) + " Br. Сокращение срока, наоборот, держит взнос прежним (" +
-        money(byTerm.phase2 ? byTerm.phase2.principal : 0) + " Br) и заканчивает выплаты на " + savedMonths + " мес. раньше.";
+        money(byPay.phase2 ? byPay.phase2.principal : 0) + " " + sign() + ". Сокращение срока, наоборот, держит взнос прежним (" +
+        money(byTerm.phase2 ? byTerm.phase2.principal : 0) + " " + sign() + ") и заканчивает выплаты на " + savedMonths + " мес. раньше.";
     }
   }
 
@@ -1589,15 +1719,26 @@ tr.final-row .cell{font-weight:600}
     var graceP = cfg.amount * cfg.pct/100;
     var html = "<h3>Зачем нужен льготный период</h3>";
     html += "<p>В эти годы вы гасите тело кредита <b>быстрее обычного</b>: " + cfg.pct.toString().replace(".", ",") +
-      " % от суммы — это " + money(graceP) + " Br в месяц против " + money(evenP) +
-      " Br при равномерном графике. Отсрочка процентов — плата за это ускорение.</p>";
+      " % от суммы — это " + money(graceP) + " " + sign() + " в месяц против " + money(evenP) +
+      " " + sign() + " при равномерном графике. Отсрочка процентов — плата за это ускорение.</p>";
     if(cfg.grace > 0){
       var off = buildWithGrace(0);
       html += "<p>Поэтому убирать его невыгодно. Поставьте <code>0</code> в поле «Льготный период» — проценты вырастут с " +
-        fmt0.format(base.totalInterest) + " до " + fmt0.format(off.totalInterest) + " Br, а платёж станет " +
-        money(off.rows[0].payment) + " Br вместо " + money(base.rows[0].payment) + " Br. Чем период длиннее, тем кредит дешевле.</p>";
+        moneyRound(base.totalInterest) + " до " + moneyRound(off.totalInterest) + " " + sign() + ", а платёж станет " +
+        money(off.rows[0].payment) + " " + sign() + " вместо " + money(base.rows[0].payment) + " " + sign() + ". Чем период длиннее, тем кредит дешевле.</p>";
     }
     box.innerHTML = html;
+  }
+
+  function renderDisclaimer(){
+    var box = document.getElementById("disclaimer");
+    var base = "Расчёт справочный. Он воспроизводит формулы договора, но не является офертой, " +
+      "официальным графиком платежей или консультацией. Точные суммы к уплате подтверждает кредитодатель.";
+    if(fxCode !== "BYN"){
+      base += " Платежи по договору фиксированы в белорусских рублях — суммы в другой валюте пересчитаны " +
+        "по сегодняшнему курсу и к дате платежа изменятся.";
+    }
+    box.textContent = base;
   }
 
   function renderLegend(base){
@@ -1605,13 +1746,13 @@ tr.final-row .cell{font-weight:600}
     var html = "";
     if(cfg.grace > 0 && afterGrace){
       html = "<b>«Проценты в платеже»</b> — сколько процентов вы реально отдаёте в этом месяце: " +
-        money(cfg.fix) + " Br в льготные годы и " + money(afterGrace.interest) + " Br после них. " +
+        money(cfg.fix) + " " + sign() + " в льготные годы и " + money(afterGrace.interest) + " " + sign() + " после них. " +
         "<b>«Накоплено процентов»</b> — справочная колонка: начислено, но ещё не оплачено. Разовым платежом " +
         "это гасить не нужно — сумма уже разложена по платежам после льготного периода. Целиком она войдёт " +
         "в платёж только если закрыть кредит досрочно.";
     } else {
       html = "<b>«Проценты в платеже»</b> — сколько процентов входит в платёж этого месяца: " +
-        money(base.rows[0].interest) + " Br в первом и дальше меньше вместе с остатком. " +
+        money(base.rows[0].interest) + " " + sign() + " в первом и дальше меньше вместе с остатком. " +
         "<b>«Накоплено процентов»</b> — начислено, но ещё не оплачено: без льготного периода хвост почти не копится.";
     }
     document.getElementById("ledger-legend").innerHTML = html;
@@ -1624,7 +1765,7 @@ tr.final-row .cell{font-weight:600}
     if(cfg.grace > 0){
       html += "<p>В льготный период размер платежа по телу закреплён договором (" +
         String(cfg.pct).replace(".", ",") + " % от суммы кредита, это " + money(cfg.amount*cfg.pct/100) +
-        " Br в месяц), поэтому досрочка там всегда работает на сокращение остатка, а выигрыш проявляется " +
+        " " + sign() + " в месяц), поэтому досрочка там всегда работает на сокращение остатка, а выигрыш проявляется " +
         "в платеже после льготного периода.</p>";
     }
     document.getElementById("note-early").innerHTML = html;
@@ -1641,11 +1782,11 @@ tr.final-row .cell{font-weight:600}
     a += "<p>Начисление идёт на остаток основного долга по ставке <code>" + rateTxt +
       " % / 12</code> в месяц — договор задаёт год в 360 дней, месяц в 30 дней, поэтому месячная ставка ровно двенадцатая часть годовой.</p>";
     if(cfg.grace > 0){
-      a += "<p>В льготные месяцы вы платите " + money(cfg.fix) + " Br процентов, а начисляется " +
-        money(first.accrued) + " Br в первый месяц. Разница копится и не прощается.</p>";
+      a += "<p>В льготные месяцы вы платите " + money(cfg.fix) + " " + sign() + " процентов, а начисляется " +
+        money(first.accrued) + " " + sign() + " в первый месяц. Разница копится и не прощается.</p>";
     } else {
       a += "<p>В первый месяц начисляется " + money(first.accrued) +
-        " Br. Дальше сумма снижается вместе с остатком долга.</p>";
+        " " + sign() + ". Дальше сумма снижается вместе с остатком долга.</p>";
     }
     document.getElementById("note-accrual").innerHTML = a;
 
@@ -1653,9 +1794,9 @@ tr.final-row .cell{font-weight:600}
     if(atGrace && afterGrace){
       owedBox.hidden = false;
       owedBox.innerHTML = "<h3>Накопленные проценты</h3>" +
-        "<p>К концу льготного периода накапливается " + fmt0.format(atGrace.owed) +
-        " Br неуплаченных процентов. Именно они делятся на оставшиеся " + rest +
-        " месяцев и дают " + money(afterGrace.interest) + " Br в платеже.</p>" +
+        "<p>К концу льготного периода накапливается " + moneyRound(atGrace.owed) +
+        " " + sign() + " неуплаченных процентов. Именно они делятся на оставшиеся " + rest +
+        " месяцев и дают " + money(afterGrace.interest) + " " + sign() + " в платеже.</p>" +
         "<p>Последняя колонка графика показывает этот хвост: при полном досрочном погашении его придётся закрыть вместе с остатком тела.</p>";
     } else {
       owedBox.hidden = true;
@@ -1667,7 +1808,7 @@ tr.final-row .cell{font-weight:600}
     var probe = base.rows[23];
     if(probe && probe.owed > 1){
       c += "<p>Закрыть всё в первые годы дороже, чем кажется: на 24-м платеже к остатку тела " +
-        fmt0.format(probe.balance) + " Br добавится " + fmt0.format(probe.owed) + " Br отложенных процентов.</p>";
+        moneyRound(probe.balance) + " " + sign() + " добавится " + moneyRound(probe.owed) + " " + sign() + " отложенных процентов.</p>";
     }
     document.getElementById("note-final").innerHTML = c;
   }
@@ -1691,6 +1832,7 @@ tr.final-row .cell{font-weight:600}
     renderNotes(base);
     renderLegend(base);
     renderEarlyNote();
+    renderDisclaimer();
     if(!helpPop.hidden) renderHelp();
     lastCur = cur; lastBase = base;
     renderSummary(cur, base);
@@ -1989,6 +2131,7 @@ tr.final-row .cell{font-weight:600}
     openYears[y] = true;
   })();
   refresh();
+  loadRates();
 })();
 </script>
 
