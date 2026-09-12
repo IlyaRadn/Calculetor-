@@ -112,8 +112,9 @@ h1,h2,h3{margin:0; text-wrap:balance}
 /* ── Шапка ─────────────────────────────── */
 .masthead{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:16px 22px;
   padding:0 4px 28px; animation:riseIn .6s ease-out}
+.masthead-side{display:flex; align-items:center; gap:16px}
 .theme-btn{
-  order:3; width:40px; height:40px; padding:0; border-radius:50%; cursor:pointer; flex:none;
+  width:40px; height:40px; padding:0; border-radius:50%; cursor:pointer; flex:none;
   border:1px solid var(--edge-2); background:var(--soft); color:var(--muted);
   display:flex; align-items:center; justify-content:center;
   transition:border-color .18s, background .18s, color .18s, box-shadow .18s;
@@ -490,7 +491,8 @@ tr.final-row .cell{font-weight:600}
 /* ── Мобильная вёрстка ─────────────────── */
 @media (max-width:720px){
   .wrap{padding:26px 12px 64px; gap:16px}
-  .masthead{flex-direction:column; align-items:flex-start; gap:12px; padding:0 2px 18px}
+  .masthead{flex-direction:column; align-items:flex-start; gap:14px; padding:0 2px 18px}
+  .masthead-side{width:100%; justify-content:space-between; gap:12px}
   .masthead h1{font-size:clamp(28px,8.5vw,38px)}
   .stamp{text-align:left; font-size:12px; line-height:1.75}
 
@@ -573,6 +575,12 @@ tr.final-row .cell{font-weight:600}
     <div>
       <h1>Кредитная <em>ведомость</em></h1>
     </div>
+    <div class="masthead-side">
+    <div class="stamp">
+      Белорусские рубли<br>
+      <b id="stamp-rate">14,5 %</b> годовых · база 360/30<br>
+      <b id="stamp-term">300 платежей</b>
+    </div>
     <button class="theme-btn" type="button" id="theme-btn" aria-label="Переключить тему" title="Светлая или тёмная тема">
       <svg class="ic-moon" viewBox="0 0 20 20" width="17" height="17" aria-hidden="true">
         <path d="M16.5 12.4A7 7 0 0 1 7.6 3.5a7 7 0 1 0 8.9 8.9Z" fill="currentColor"/>
@@ -583,10 +591,6 @@ tr.final-row .cell{font-weight:600}
               stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
       </svg>
     </button>
-    <div class="stamp">
-      Белорусские рубли<br>
-      <b id="stamp-rate">14,5 %</b> годовых · база 360/30<br>
-      <b id="stamp-term">300 платежей</b>
     </div>
   </header>
 
