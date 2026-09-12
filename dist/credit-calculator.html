@@ -343,6 +343,25 @@ h1,h2,h3{margin:0; text-wrap:balance}
 .chip button:hover{color:var(--alert); background:rgba(214,17,62,.12)}
 .empty{font-size:13px; color:var(--faint)}
 
+.toggle-wrap{position:relative; display:flex; align-items:center; gap:8px}
+.help-btn{
+  width:20px; height:20px; padding:0; border-radius:50%; cursor:pointer; flex:none;
+  border:1px solid var(--edge-2); background:transparent; color:var(--faint);
+  font:inherit; font-size:12px; font-weight:600; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  transition:border-color .15s, color .15s, background .15s;
+}
+.help-btn:hover, .help-btn[aria-expanded="true"]{background:var(--hot-bg); border-color:var(--hot-edge); color:var(--accent)}
+.help-btn:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+.help-pop{
+  position:absolute; top:calc(100% + 10px); right:0; z-index:45; width:320px; max-width:calc(100vw - 32px);
+  padding:15px 17px; background:var(--popup); border:1px solid var(--edge-2); border-radius:14px;
+  box-shadow:var(--popup-shadow); font-size:12.5px; line-height:1.55; color:var(--muted);
+  animation:riseIn .16s ease-out; text-align:left; font-weight:400;
+}
+.help-pop p{margin:0 0 9px}
+.help-pop p:last-child{margin-bottom:0}
+.help-pop b{color:var(--ink); font-weight:600}
 .toggle{display:flex; align-items:center; gap:9px; cursor:pointer; user-select:none}
 .toggle input{position:absolute; width:1px; height:1px; opacity:0; margin:-1px}
 .toggle-track{
@@ -570,11 +589,16 @@ tr.final-row .cell{font-weight:600}
   <section class="card card-terms">
     <div class="card-head">
       <h2>Условия договора</h2>
-      <label class="toggle">
-        <input type="checkbox" id="f-grace-on" checked>
-        <span class="toggle-track"><span class="toggle-knob"></span></span>
-        <span class="toggle-text">Льготный период</span>
-      </label>
+      <div class="toggle-wrap">
+        <label class="toggle">
+          <input type="checkbox" id="f-grace-on" checked>
+          <span class="toggle-track"><span class="toggle-knob"></span></span>
+          <span class="toggle-text">Льготный период</span>
+        </label>
+        <button class="help-btn" type="button" id="grace-help" aria-expanded="false"
+                aria-label="Что такое льготный период">?</button>
+        <div class="help-pop" id="grace-help-pop" hidden role="dialog" aria-label="Льготный период"></div>
+      </div>
     </div>
     <div class="terms">
       <div class="field">
@@ -1157,6 +1181,59 @@ tr.final-row .cell{font-weight:600}
     }
   }
 
+  /* ── Подсказка про льготный период ──────────────────────────────────── */
+  var helpBtn = document.getElementById("grace-help");
+  var helpPop = document.getElementById("grace-help-pop");
+
+  function renderHelp(){
+    var graceP = cfg.amount * cfg.pct/100;
+    var evenP = cfg.amount/cfg.term;
+    var html = "<p><b>Льготный период</b> — первые месяцы кредита, когда платёж считается по особому правилу, " +
+      "а не по обычному графику.</p>";
+    if(cfg.grace > 0){
+      html += "<p>В эти " + cfg.grace + " мес. вы отдаёте <b>" + String(cfg.pct).replace(".", ",") +
+        " % от суммы кредита</b> в счёт тела — это " + money(graceP) + " Br, почти вдвое больше обычных " +
+        money(evenP) + " Br. Процентов при этом платите всего " + money(cfg.fix) + " Br.</p>";
+      html += "<p>Начисляются они полностью, поэтому разница копится и после периода делится на оставшиеся месяцы. " +
+        "Тело гасится быстрее — за это и отсрочка.</p>";
+    } else {
+      html += "<p>Сейчас он выключен: платёж считается обычным способом — тело равными долями, проценты по факту " +
+        "начисления. Включите тумблер, чтобы вернуть льготные условия.</p>";
+    }
+    helpPop.innerHTML = html;
+  }
+
+  helpBtn.addEventListener("click", function(){
+    var open = helpPop.hidden;
+    if(open) renderHelp();
+    helpPop.hidden = !open;
+    helpBtn.setAttribute("aria-expanded", String(open));
+    if(!open) return;
+    /* по умолчанию прижат к правому краю кнопки; на узком экране это уводит его
+       за левую границу — тогда прижимаем к левому и подтягиваем обратно */
+    helpPop.style.left = "auto";
+    helpPop.style.right = "0px";
+    if(helpPop.getBoundingClientRect().left < 8){
+      helpPop.style.right = "auto";
+      helpPop.style.left = "0px";
+      var over = helpPop.getBoundingClientRect().right - (window.innerWidth - 8);
+      if(over > 0) helpPop.style.left = (-over) + "px";
+    }
+  });
+  document.addEventListener("click", function(ev){
+    if(!helpPop.hidden && !ev.target.closest(".toggle-wrap")){
+      helpPop.hidden = true;
+      helpBtn.setAttribute("aria-expanded", "false");
+    }
+  });
+  document.addEventListener("keydown", function(ev){
+    if(ev.key === "Escape" && !helpPop.hidden){
+      helpPop.hidden = true;
+      helpBtn.setAttribute("aria-expanded", "false");
+      helpBtn.focus();
+    }
+  });
+
   /* ── Тема ───────────────────────────────────────────────────────────── */
   var themeBtn = document.getElementById("theme-btn");
 
@@ -1606,6 +1683,7 @@ tr.final-row .cell{font-weight:600}
     renderNotes(base);
     renderLegend(base);
     renderEarlyNote();
+    if(!helpPop.hidden) renderHelp();
     lastCur = cur; lastBase = base;
     renderSummary(cur, base);
     renderLedger(cur);
