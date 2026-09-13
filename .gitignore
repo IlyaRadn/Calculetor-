@@ -1,0 +1,11 @@
+.DS_Store
+node_modules/
+
+# Движок impeccable: 12 МБ, собран под конкретную ОС и процессор, и на чужой
+# машине всё равно бесполезен. Пусковой скрипт рядом с этой папкой скачивает
+# нужную сборку сам при первом запуске.
+.claude/skills/impeccable/scripts/bin/
+.cursor/skills/impeccable/scripts/bin/
+
+# Локальные настройки Claude Code: у каждого свои.
+.claude/settings.local.json
