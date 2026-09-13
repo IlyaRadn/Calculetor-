@@ -34,6 +34,19 @@ const MIRROR = join(root, ".cursor", "skills");
  */
 const EXTERNAL = new Set(["impeccable"]);
 
+/*
+ * Скиллы вкуса, переведённые в ручной режим. Они предлагают свою палитру,
+ * свои шрифты и свою сетку — полезно, когда их зовут осознанно, и вредно,
+ * когда они срабатывают сами на правку формы. Строчка `disable-model-invocation`
+ * стоит в файлах, которые ставит `npx skills add`, поэтому обновление их
+ * затрёт молча. Проверка ниже это ловит.
+ */
+const MANUAL_ONLY = new Set([
+  "design-taste-frontend",
+  "high-end-visual-design",
+  "redesign-existing-projects",
+]);
+
 const checkOnly = process.argv.includes("--check");
 const problems = [];
 
@@ -87,6 +100,13 @@ function validate(name) {
     );
   }
   if (!field("description")) problems.push(`${name}/SKILL.md: нет поля description`);
+
+  if (MANUAL_ONLY.has(name) && field("disable-model-invocation") !== "true") {
+    problems.push(
+      `${name}/SKILL.md: потерян «disable-model-invocation: true» — скилл снова будет ` +
+        `срабатывать сам. Скорее всего его затёрло «npx skills update»; вернуть строку.`,
+    );
+  }
 }
 
 /* ── зеркало ──────────────────────────────────────────────────────────────── */

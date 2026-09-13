@@ -1,65 +1,65 @@
 ---
 name: motion-system
-description: Заводит и удерживает в репозитории единую систему движения — motion tokens: шкалу длительностей, набор кривых, правило для prefers-reduced-motion — и переводит разрозненные значения переходов на неё. Нужен тогда, когда в проекте уже накопились переходы с произвольными числами (.12s тут, 180ms там, ease-in-out везде) и анимации перестали выглядеть частями одного интерфейса. Использовать на «унифицировать анимации», «токены движения», «привести переходы к системе», «motion tokens», «design tokens for animation». Отдельную анимацию строит скилл animate, этот — про общий словарь для всех.
+description: Establishes and maintains one motion system in a codebase — motion tokens: a duration scale, a set of curves, a prefers-reduced-motion rule — and migrates scattered transition values onto it. For a project that has accumulated arbitrary numbers (.12s here, 180ms there, ease-in-out everywhere) until the animations stopped reading as parts of one interface. Use on "unify the animations", "motion tokens", "get the transitions onto a scale", "design tokens for animation". Building a single animation is the animate skill; this one is the shared vocabulary behind all of them.
 license: MIT
 ---
 
-# Система движения
+# Motion System
 
-Интерфейс выглядит собранным, когда переходы в нём звучат одинаково. Десять
-похожих переходов с длительностями 120, 140, 150, 180 и 200 мс читаются как
-десять разных решений, даже если каждое по отдельности разумно.
+An interface reads as one piece when its transitions sound alike. Ten similar
+transitions at 120, 140, 150, 180 and 200ms read as ten separate decisions,
+even when each one is defensible on its own.
 
-Скилл заводит общий словарь и переводит на него код. Он не придумывает новые
-анимации — для этого `animate` — и не судит существующие — для этого
-`review-animations`.
+This skill establishes a shared vocabulary and migrates the code onto it. It
+does not invent new animations — that is `animate` — and it does not judge
+existing ones — that is `review-animations`.
 
-## 1. Сначала посчитать, потом решать
+## 1. Count first, decide second
 
-Собрать по репозиторию все длительности и кривые:
+Collect every duration and curve in the repository:
 
 ```bash
 grep -rn "transition\|animation:" --include=*.css --include=*.tsx --include=*.ts --include=*.html .
 ```
 
-Выписать частоты: сколько раз встречается каждое значение. Шкала строится из
-того, что уже есть, а не из красивого ряда с чистого листа — иначе перевод
-превращается в переписывание всех переходов сразу.
+Write down frequencies: how often each value appears. The scale is built from
+what is already there, not from a clean-sheet sequence — otherwise migration
+turns into rewriting every transition at once.
 
-Медиана коротких переходов обычно и есть будущий «быстрый» шаг.
+The median of the short transitions is usually the future "fast" step.
 
-## 2. Шкала
+## 2. The scale
 
-Четырёх ступеней хватает интерфейсу любого размера. Больше — и выбор ступени
-снова становится вкусовым.
+Four steps are enough for an interface of any size. More, and picking a step
+becomes a matter of taste again.
 
-| Токен | Обычно | Для чего |
+| Token | Typically | For |
 |---|---|---|
-| `--dur-instant` | 60–100 мс | Отклик на нажатие: цвет, лёгкий сдвиг. Человек не должен успеть заметить переход. |
-| `--dur-fast` | 120–180 мс | Ховер, фокус, переключатель, раскрытие мелочи. Основная рабочая ступень. |
-| `--dur-base` | 200–280 мс | Появление панели, модального окна, выпадающего списка. |
-| `--dur-slow` | 320–450 мс | Смена крупной области: экран, лист, шторка. Дальше начинается ожидание. |
+| `--dur-instant` | 60–100ms | Press feedback: colour, a slight shift. The person should not register a transition at all. |
+| `--dur-fast` | 120–180ms | Hover, focus, a toggle, revealing something small. The main working step. |
+| `--dur-base` | 200–280ms | A panel, a modal, a dropdown arriving. |
+| `--dur-slow` | 320–450ms | A large area changing: a screen, a sheet, a drawer. Past this it becomes waiting. |
 
-Кривые — три, и каждая отвечает на вопрос «откуда и куда движется элемент»:
+Three curves, each answering "where is this element coming from and going to":
 
-| Токен | Значение | Когда |
+| Token | Value | When |
 |---|---|---|
-| `--ease-out` | `cubic-bezier(.2, 0, 0, 1)` | Появление и всё, что приходит к пользователю. Быстрый старт, мягкая остановка. |
-| `--ease-in` | `cubic-bezier(.4, 0, 1, 1)` | Только исчезновение. На появлении даёт вязкий, «залипающий» старт. |
-| `--ease-in-out` | `cubic-bezier(.4, 0, .2, 1)` | Движение внутри экрана: элемент был виден до и остаётся виден после. |
+| `--ease-out` | `cubic-bezier(.2, 0, 0, 1)` | Entrances, and anything arriving toward the user. Fast start, soft landing. |
+| `--ease-in` | `cubic-bezier(.4, 0, 1, 1)` | Exits only. On an entrance it produces a sluggish, sticky start. |
+| `--ease-in-out` | `cubic-bezier(.4, 0, .2, 1)` | Movement within the screen: the element was visible before and stays visible after. |
 
-Правило, которое закрывает большую часть ошибок: **входит — `out`, выходит —
-`in`, перемещается — `in-out`.**
+One rule covers most of the mistakes: **entering is `out`, leaving is `in`,
+moving is `in-out`.**
 
-Пружины (Motion, Framer Motion) шкале длительностей не подчиняются и живут
-рядом с ней: их смысл в том, что они прерываемы и наследуют скорость жеста.
-Для них фиксируются параметры, а не время. Подробности — `apple-design`.
+Springs (Motion, Framer Motion) do not obey a duration scale and live beside
+it: their whole point is being interruptible and velocity-aware. Record their
+parameters, not a time. For detail, see `apple-design`.
 
-## 3. Куда класть
+## 3. Where they go
 
-В тот же файл, где уже живут остальные токены проекта — рядом с цветом и
-типографикой, не в отдельный `motion.css`. Разделение по типу токена приводит
-к тому, что про половину файлов забывают.
+In the same file as the project's other tokens — next to colour and type, not
+in a separate `motion.css`. Splitting tokens by kind is how half the files end
+up forgotten.
 
 ```css
 :root {
@@ -74,35 +74,35 @@ grep -rn "transition\|animation:" --include=*.css --include=*.tsx --include=*.ts
 }
 ```
 
-Если проект на Tailwind 4 — в `@theme`, рядом с палитрой, чтобы значения были
-доступны и как утилиты, и как переменные.
+On Tailwind 4, put them in `@theme` alongside the palette, so the values are
+available both as utilities and as variables.
 
-## 4. Перевод кода
+## 4. Migrating the code
 
-По одному файлу, начиная с того, где переходов больше всего. В каждом
-переходе меняется и длительность, и кривая: длительность из шкалы с кривой по
-умолчанию оставляет работу наполовину сделанной.
+One file at a time, starting with the one holding the most transitions. Change
+both the duration and the curve in each: a scale duration with a default curve
+leaves the job half done.
 
 ```css
-/* было */
+/* before */
 transition: background .12s, border-color .12s, transform .06s;
 
-/* стало */
+/* after */
 transition:
   background   var(--dur-fast)    var(--ease-out),
   border-color var(--dur-fast)    var(--ease-out),
   transform    var(--dur-instant) var(--ease-out);
 ```
 
-Три вещи, которые надо не потерять по дороге:
+Three things not to lose along the way:
 
-- **`transition: all` — всегда находка.** Он анимирует и то, что анимировать не собирались, включая `height` при смене содержимого. Перечислять свойства поимённо.
-- **Анимировать только `transform` и `opacity`.** Всё остальное заставляет браузер пересчитывать вёрстку в каждом кадре. `width`, `height`, `top`, `left`, `margin` в переходе — переписать через `transform`.
-- **Значение вне шкалы имеет право на жизнь, но с комментарием.** Одна строка о том, почему здесь 700 мс. Без неё следующий человек либо «исправит» её под шкалу, либо скопирует как новый стандарт.
+- **`transition: all` is always a finding.** It animates things nobody meant to animate, `height` on a content change included. Name the properties.
+- **Animate `transform` and `opacity` only.** Everything else makes the browser recompute layout every frame. `width`, `height`, `top`, `left`, `margin` in a transition gets rewritten as a `transform`.
+- **A value outside the scale may stay, but it carries a comment.** One line on why this one is 700ms. Without it the next person either "corrects" it onto the scale or copies it as the new standard.
 
-## 5. Уважение к настройке
+## 5. Honouring the setting
 
-Один блок на весь проект, и он обязателен:
+One block for the whole project, and it is mandatory:
 
 ```css
 @media (prefers-reduced-motion: reduce) {
@@ -115,21 +115,22 @@ transition:
 }
 ```
 
-CSS закрывает только CSS. Анимации из JavaScript — `element.animate()`,
-`scrollIntoView({ behavior: 'smooth' })`, пружины из библиотек — этот блок не
-видят, и каждую надо гасить в коде:
+CSS only covers CSS. Motion from JavaScript — `element.animate()`,
+`scrollIntoView({ behavior: 'smooth' })`, springs from a library — never sees
+that block, and each one has to be handled in code:
 
 ```js
 const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 element.scrollIntoView({ behavior: calm ? 'auto' : 'smooth' });
 ```
 
-Проверять живой настройкой системы, а не на слово. В macOS — Универсальный
-доступ → Дисплей → Уменьшение движения; в DevTools — команда «Emulate
-prefers-reduced-motion».
+Verify with the real system setting, not by reading the code. On macOS:
+Accessibility → Display → Reduce motion. In DevTools: the "Emulate
+prefers-reduced-motion" command.
 
-## 6. Записать в DESIGN.md
+## 6. Write it into DESIGN.md
 
-Шкала, кривые и правило «входит — out, выходит — in» переносятся в `DESIGN.md`
-проекта. Оттуда их читают и `/impeccable animate`, и `animate`, и следующий
-человек — иначе система движения проживёт ровно до первого нового компонента.
+The scale, the curves and the "entering is out, leaving is in" rule go into
+the project's `DESIGN.md`. That is where `/impeccable animate`, `animate` and
+the next person read them from — otherwise the motion system survives exactly
+until the next new component.

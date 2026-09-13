@@ -1,117 +1,117 @@
 ---
 name: handoff-package
-description: Собирает досье на передачу продукта — handoff / due diligence пакет для покупателя или нового разработчика. Восстанавливает по коду то, что обычно живёт только в голове автора: из чего собрано, где развёрнуто, какие внешние сервисы и сколько стоят в месяц, какие переменные окружения нужны, как выкатить и как откатить, что сломается первым, какие лицензии у зависимостей. Пишет docs/handoff.md. Использовать на «готовим к продаже», «передаём проект», «что отдать покупателю», «handoff», «due diligence», а также перед тем, как к репозиторию подключится новый человек.
+description: Assembles the handover dossier for a product — the due-diligence package a buyer or an incoming developer needs. Reconstructs from the code what normally lives only in the author's head: what it is built from, where it is deployed, which external services it depends on and what they cost per month, which environment variables are required, how to ship and how to roll back, what breaks first, what licences the dependencies carry. Writes docs/handoff.md. Use on "preparing to sell", "handing the project over", "what do we give the buyer", "handoff", "due diligence", and before a new person joins the repository.
 license: MIT
 ---
 
-# Досье на передачу
+# Handover Dossier
 
-Продукт продаётся вместе с возможностью его развивать. Покупатель платит не
-за исходники — их можно прочитать, — а за ответы на вопросы, которые иначе
-придётся выяснять неделю: куда это задеплоено, кому принадлежит домен, что
-будет, если кончится бесплатный тариф.
+A product is sold together with the ability to keep developing it. The buyer
+is not paying for the source — they can read that — but for answers to the
+questions that otherwise take a week to work out: where is this deployed, who
+owns the domain, what happens when the free tier runs out.
 
-Результат — `docs/handoff.md`. Один файл, потому что досье из двенадцати
-файлов не читают.
+The output is `docs/handoff.md`. One file, because a dossier spread across
+twelve files does not get read.
 
-## Правило достоверности
+## The accuracy rule
 
-**Каждое утверждение в досье подтверждается местом в репозитории.**
+**Every claim in the dossier is backed by a place in the repository.**
 
-Не нашли подтверждения — пишем в раздел «Выяснить у владельца», а не
-придумываем правдоподобное. Досье, в котором половина выдумана, хуже
-отсутствующего: покупатель поверит и построит на этом план.
+No backing means it goes into "Ask the owner", not into a plausible
+invention. A dossier that is half fabricated is worse than none: the buyer
+will believe it and plan around it.
 
-Суммы, сроки, договорённости с подрядчиками, права на домен и на бренд — почти
-всегда из этой категории. Их знает только владелец.
+Amounts, deadlines, arrangements with contractors, rights to the domain and to
+the brand — these are almost always in that category. Only the owner knows.
 
-## Сбор
+## Gathering
 
-Идти по источникам в этом порядке — каждый следующий уточняет предыдущий.
+Work the sources in this order; each one sharpens the last.
 
-1. **`README.md`, `PRODUCT.md`, `docs/`** — что уже описано. Не переписывать, а ссылаться.
-2. **Манифесты** (`package.json`, `Cargo.toml`, `requirements.txt`) — состав, скрипты, версии рантайма.
-3. **`.env.example` и чтение переменных в коде** — полный список настроек. Сверить одно с другим: переменная, которую код читает, а `.env.example` не перечисляет, — находка, и частая.
-4. **Docker, compose, Caddyfile, nginx.conf, workflows** — как это поднимается и куда выкатывается.
-5. **Клиенты внешних сервисов в коде** — хранилища, почта, платежи, аналитика, карты, боты. Каждый такой вызов означает чужой аккаунт, который придётся переоформить.
-6. **`git log`** — темп работы и зоны, которые трогали чаще всего.
+1. **`README.md`, `PRODUCT.md`, `docs/`** — what is already written down. Link to it rather than restating it.
+2. **Manifests** (`package.json`, `Cargo.toml`, `requirements.txt`) — composition, scripts, runtime versions.
+3. **`.env.example` plus every variable the code actually reads** — the full settings list. Cross-check the two: a variable the code reads that `.env.example` omits is a finding, and a common one.
+4. **Docker, compose, Caddyfile, nginx.conf, workflows** — how this comes up and where it ships.
+5. **External service clients in the code** — storage, mail, payments, analytics, maps, bots. Every such call means somebody else's account that will have to be transferred.
+6. **`git log`** — pace of work, and the areas touched most often.
 
-## Структура docs/handoff.md
+## Structure of docs/handoff.md
 
 ```markdown
-# Передача: <название>
+# Handover: <name>
 
-## Что это
-Два-три абзаца: задача продукта, кто пользователь, в каком состоянии сейчас.
-Честно про стадию: прототип, MVP в работе, продукт с пользователями.
+## What this is
+Two or three paragraphs: what the product does, who uses it, where it stands
+today. Honest about the stage: prototype, MVP in progress, product with users.
 
-## Стек
-Таблица: слой — выбор — версия — почему так.
-«Почему» короткое и настоящее; если причина неизвестна, строка опускается.
+## Stack
+Table: layer — choice — version — why.
+The "why" is short and real; drop the row if the reason is unknown.
 
-## Как запустить
-Команды от `git clone` до открытого в браузере адреса.
-Версии рантайма и внешние требования (база, докер) — явно.
+## Running it
+Commands from `git clone` to an address open in a browser.
+Runtime versions and external requirements (database, docker) stated outright.
 
-## Переменные окружения
-Таблица: имя — обязательна ли — что делает — где брать значение.
-Настоящих значений в досье нет и быть не может.
+## Environment variables
+Table: name — required? — what it does — where the value comes from.
+No real values appear in a dossier, ever.
 
-## Куда развёрнуто
-Адреса, площадки, кто владелец аккаунта.
-Как выкатывается новая версия. Как откатить.
+## Where it is deployed
+Addresses, providers, who owns the account.
+How a new version ships. How to roll back.
 
-## Внешние сервисы и стоимость
-Таблица: сервис — зачем — тариф — примерно в месяц — на чьём аккаунте.
-Отдельной строкой: что сломается, если аккаунт не переоформить.
+## External services and cost
+Table: service — what for — tier — roughly per month — whose account.
+A separate line: what breaks if the account is not transferred.
 
-## Данные
-Где лежат, как устроены, есть ли резервные копии и как восстановиться.
-Что относится к персональным данным и что это значит для владельца.
+## Data
+Where it lives, how it is shaped, whether there are backups and how to restore.
+What counts as personal data and what that means for the owner.
 
-## Что сломается первым
-Честный список слабых мест с оценкой: когда упрётся и во что.
-Раздел, который покупатель читает первым, и именно он определяет доверие
-ко всему остальному.
+## What breaks first
+An honest list of weak points with an estimate: when it gives, and into what.
+The section the buyer reads first, and the one that sets their trust in
+everything else.
 
-## Лицензии
-Лицензия самого продукта.
-Зависимости и вендорённые материалы с несвободными или вирусными условиями.
-Шрифты и изображения — отдельно: их лицензии чаще всего и оказываются
-несовместимы с продажей.
+## Licences
+The product's own licence.
+Dependencies and vendored assets with non-free or copyleft terms.
+Fonts and images separately: their licences are the ones that most often turn
+out to be incompatible with selling.
 
-## Выяснить у владельца
-Вопросы, на которые в репозитории ответа нет.
+## Ask the owner
+Questions the repository cannot answer.
 ```
 
-## Оценка стоимости
+## Costing
 
-Считать по тарифам, а не по ощущениям. Для каждого внешнего сервиса:
-текущий тариф, что в него входит, и порог, за которым начинается оплата.
+Work from published tiers, not from impressions. For every external service:
+current tier, what it includes, and the threshold where billing starts.
 
-Где тариф неизвестен — «бесплатный тариф, порог не проверен», а не
-выдуманная сумма.
+Where the tier is unknown, write "free tier, threshold unverified" rather than
+inventing a number.
 
-## Раздел «Что сломается первым»
+## The "What breaks first" section
 
-Здесь проходит граница между досье и рекламной страницей. Писать конкретно:
+This is where a dossier separates from a sales page. Be specific:
 
-> Файлы лежат на диске контейнера, а не в объектном хранилище. При
-> пересоздании контейнера загруженное пропадает. Порог — первый переезд
-> или первый деплой с пересборкой образа.
+> Uploads are written to the container's disk rather than to object storage.
+> Recreating the container loses them. The threshold is the first migration,
+> or the first deploy that rebuilds the image.
 
-А не «есть риски, связанные с хранением файлов».
+Not "there are risks around file storage".
 
-Источники таких находок: TODO и FIXME в коде, ручные шаги в деплое, отсутствие
-резервных копий, единственная точка отказа, бесплатные тарифы у критичных
-сервисов, зависимости без обновлений, отсутствующие тесты на главном сценарии.
+Sources for these: TODO and FIXME comments, manual steps in the deploy, absent
+backups, single points of failure, free tiers under critical services,
+unmaintained dependencies, no tests on the primary journey.
 
-Отчёт скилла `mvp-ship-check`, если он уже есть, — готовое сырьё для этого
-раздела; дублировать его целиком не надо, достаточно ссылки и выжимки.
+A `mvp-ship-check` report, if one exists, is ready material for this section —
+do not paste it whole; a reference and a summary are enough.
 
-## Обновление
+## Refreshing
 
-Досье устаревает быстрее кода. При повторном запуске — перечитать источники
-заново и переписать разошедшееся, сохранив то, что владелец дописал руками.
-Строки из «Выяснить у владельца», на которые он ответил, переехали в
-соответствующий раздел и из списка вопросов ушли.
+A dossier goes stale faster than the code. On a second run, re-read the sources
+and rewrite whatever has drifted, preserving anything the owner added by hand.
+Items in "Ask the owner" that were answered move into their proper section and
+leave the question list.

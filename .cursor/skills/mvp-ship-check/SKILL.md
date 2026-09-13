@@ -1,122 +1,122 @@
 ---
 name: mvp-ship-check
-description: Проверка готовности MVP к показу и продаже — pre-launch / release readiness audit. Проходит по живому коду и ищет то, что покупатель или первый пользователь увидит раньше нас: пустые и ошибочные состояния, поведение на телефоне, доступность с клавиатуры, prefers-reduced-motion, вес и скорость первой отрисовки, мета-теги и favicon, забытые секреты и личные данные в значениях по умолчанию, лицензии зависимостей. Ничего не чинит — выдаёт отчёт с приоритетами и ссылками вида файл:строка. Использовать перед демо, перед публикацией, перед передачей репозитория, а также на вопросы «готово ли», «что доделать до продажи», «ship check», «release readiness».
+description: Release-readiness audit for an MVP about to be demoed, launched, or sold. Walks the live code looking for what a buyer or first user hits before we do — missing empty and error states, behaviour on a phone, keyboard access, prefers-reduced-motion, weight and first paint, meta tags and favicon, forgotten secrets and personal data in defaults, dependency licences. Fixes nothing; produces a prioritised report with file:line references. Use before a demo, before publishing, before handing the repository over, and on "is this ready", "what's left before we sell", "ship check", "launch checklist", "release readiness".
 license: MIT
 ---
 
-# Готовность MVP
+# MVP Readiness
 
-Скилл читает и считает, но не правит. Результат — один отчёт, по которому
-любой другой агент или человек может закрыть находки по очереди.
+This skill reads and counts. It does not edit. The result is one report that
+any other agent — or person — can work through item by item.
 
-Причина такого разделения простая: решение «чинить это сейчас или показывать
-как есть» принимает владелец продукта, а не тот, кто нашёл проблему. Отчёт,
-который сам себя починил, отнимает у него это решение и заодно прячет
-находки внутри диффа.
+The split is deliberate: whether to fix something now or show it as-is is the
+owner's call, not the finder's. A report that fixed itself takes that decision
+away and buries the findings inside a diff.
 
-## Порядок
+## Procedure
 
-### 1. Понять, что именно продаётся
+### 1. Establish what is actually being sold
 
-Прочитать `PRODUCT.md`, если он есть, иначе `README.md`. Из него взять:
-главный сценарий (что человек приходит сделать), кто пользователь, где это
-крутится. Без этого проверка превращается в общий линтер.
+Read `PRODUCT.md` if it exists, otherwise `README.md`. Extract the primary
+journey (what a person arrives to do), who the user is, and where this runs.
+Without that, the audit degenerates into a generic linter.
 
-**Главный сценарий — единица измерения.** Находка на пути главного сценария
-всегда важнее находки в настройках.
+**The primary journey is the unit of measurement.** A finding on that path
+always outranks a finding in settings.
 
-### 2. Пройти сценарий глазами
+### 2. Walk the journey as a stranger
 
-Найти в коде экран или страницу, с которой начинается главный сценарий, и
-пройти его до результата. На каждом шаге отвечать на четыре вопроса:
+Find the screen or page where the primary journey starts and follow it to the
+result. At every step, answer four questions:
 
-- Что видно, пока данные грузятся?
-- Что видно, когда данных нет совсем (первый запуск, пустой список, пустой поиск)?
-- Что видно, когда запрос упал или ввод неверный?
-- Что видно после успеха — понятно ли, что всё получилось?
+- What is on screen while data loads?
+- What is on screen when there is no data at all — first run, empty list, empty search?
+- What is on screen when the request fails or the input is invalid?
+- What is on screen after success — is it clear that it worked?
 
-Отсутствие любого из четырёх состояний — находка. Это самый частый разрыв
-между «работает у автора» и «работает у чужого человека».
+A missing answer to any of the four is a finding. This is the most common gap
+between "works for the author" and "works for a stranger".
 
-### 3. Проверить по списку
+### 3. Work the checklist
 
-Каждый пункт — либо ✅, либо находка с точной ссылкой. Не отмечать ✅ без
-подтверждения в коде: недоказанная галочка хуже пропуска.
+Every item is either ✅ or a finding with an exact reference. Never mark ✅
+without confirming it in the code: an unverified tick is worse than a skipped
+one.
 
-**Телефон**
-- Вёрстка не ломается на 375 пикселях ширины; нет горизонтальной прокрутки body.
-- Цели нажатия от 44 пикселей; поля ввода от 16px шрифта, иначе iOS зумит страницу при фокусе.
-- `<meta name="viewport" content="width=device-width, initial-scale=1">` на месте — без неё мобильная вёрстка просто не включается.
-- Учтены вырезы: `env(safe-area-inset-*)` там, где интерфейс доходит до краёв.
+**Phone**
+- Layout survives 375px wide; `body` does not scroll horizontally.
+- Tap targets 44px and up; inputs at 16px font or larger, or iOS zooms the page on focus.
+- `<meta name="viewport" content="width=device-width, initial-scale=1">` is present — without it mobile layout never engages at all.
+- Notches accounted for: `env(safe-area-inset-*)` wherever the UI reaches the edges.
 
-**Доступность**
-- Весь главный сценарий проходится с клавиатуры; фокус видно всегда (`:focus-visible`).
-- У интерактивных элементов есть доступное имя; у иконок без подписи — `aria-label`.
-- Контраст текста к фону от 4.5:1, у крупного — от 3:1. Проверять обе темы, если тем две.
-- Состояние передаётся не одним цветом: у ошибки есть текст, у выбранного — не только оттенок.
-- Есть блок `@media (prefers-reduced-motion: reduce)`, и он гасит в том числе анимации, заданные из JavaScript.
+**Access**
+- The whole primary journey works from the keyboard; focus is always visible (`:focus-visible`).
+- Interactive elements have accessible names; unlabelled icons have `aria-label`.
+- Text contrast 4.5:1, large text 3:1. Check both themes when there are two.
+- State is never carried by colour alone: errors have text, selection has more than a tint.
+- A `@media (prefers-reduced-motion: reduce)` block exists, and it also kills motion started from JavaScript.
 
-**Движение**
-- Ничего не анимируется бесконечно без причины — это съедает батарею и внимание.
-- Анимируются `transform` и `opacity`; `width`, `height`, `top`, `left` в переходах — находка.
-- Длительности в пределах 120–300 мс для интерфейсных переходов. Подробности — скилл `review-animations`.
+**Motion**
+- Nothing animates forever without a reason — it costs battery and attention.
+- `transform` and `opacity` only; `width`, `height`, `top`, `left` in a transition is a finding.
+- Interface transitions land in 120–300ms. For detail, see the `review-animations` skill.
 
-**Скорость и вес**
-- Размер того, что уезжает пользователю: собранные бандлы, изображения, шрифты.
-- Шрифты не блокируют отрисовку: есть `display=swap` или локальный fallback-стек.
-- Изображения заданы с размерами — иначе вёрстка прыгает при загрузке.
-- Нет блокирующих запросов на сторонние домены в первой отрисовке.
+**Weight and speed**
+- Size of what actually ships: bundles, images, fonts.
+- Fonts do not block paint: `display=swap` or a real local fallback stack.
+- Images carry dimensions — otherwise the layout jumps as they load.
+- No blocking third-party requests in the first paint.
 
-**Первое впечатление и ссылки**
-- `<title>`, `<meta name="description">`, favicon, `og:title`/`og:description`/`og:image` — ссылка на продукт должна разворачиваться в мессенджере во что-то осмысленное.
-- `lang` у `<html>` соответствует языку интерфейса.
-- Есть решение по индексации: либо `noindex` осознанно, либо продукт готов к выдаче.
+**First impression and links**
+- `<title>`, `<meta name="description">`, favicon, `og:title` / `og:description` / `og:image` — a link to the product has to unfurl into something meaningful in a messenger.
+- `lang` on `<html>` matches the interface language.
+- Indexing is a decision, not an accident: either a deliberate `noindex`, or the product is ready to be found.
 
-**Чистота перед чужими глазами**
-- В коде и в значениях по умолчанию нет личных данных, реальных сумм, телефонов, адресов, внутренних ссылок.
-- Нет ключей, токенов, паролей — ни в исходниках, ни в истории, ни в `.env`, попавшем под версионный контроль.
-- `.env.example` перечисляет все переменные, которые нужны для запуска, и ни одного настоящего значения.
-- Репозиторий собирается и запускается по инструкции из README на чистой машине.
+**Clean for outside eyes**
+- No personal data, real amounts, phone numbers, addresses or internal links in the code or in default values.
+- No keys, tokens or passwords — not in source, not in history, not in a `.env` that slipped under version control.
+- `.env.example` lists every variable needed to run and not one real value.
+- The repository builds and runs from the README on a clean machine.
 
-**Права**
-- У всех зависимостей и вендорённых материалов лицензии, совместимые с продажей продукта.
-- Шрифты и изображения лицензированы для коммерческого использования.
-- Файлы лицензий чужого кода лежат рядом с ним, а не удалены при копировании.
+**Rights**
+- Every dependency and vendored asset carries a licence compatible with selling the product.
+- Fonts and images are licensed for commercial use.
+- Licence files for third-party code sit next to it rather than having been dropped during the copy.
 
-### 4. Отчёт
+### 4. The report
 
 ```markdown
-# Готовность: <название>
+# Readiness: <name>
 
-Главный сценарий: <одной строкой>
-Проверено: <дата>
+Primary journey: <one line>
+Audited: <date>
 
-## Блокирует показ
-1. **<что>** — `путь:строка`
-   Видно так: <что увидит человек>
-   Чинится так: <одно-два предложения>
+## Blocks the demo
+1. **<what>** — `path:line`
+   What the person sees: <…>
+   How it is fixed: <a sentence or two>
 
-## Портит впечатление
+## Undermines the impression
 ...
 
-## Стоит сделать до продажи
+## Do before selling
 ...
 
-## Проверено и в порядке
-- <пункт> — <чем подтверждено>
+## Checked and sound
+- <item> — <what confirmed it>
 ```
 
-Три уровня, и они не про сложность починки, а про цену для владельца:
+Three tiers, ordered by cost to the owner rather than by effort to fix:
 
-- **Блокирует показ** — человек упирается в тупик, видит ошибку без объяснения, теряет введённое, или наружу утекает лишнее.
-- **Портит впечатление** — работает, но выглядит незаконченным: нет пустого состояния, дёргается вёрстка, ссылка разворачивается пустотой.
-- **Стоит сделать до продажи** — не мешает демонстрации, но всплывёт при передаче: лицензии, документация, переменные окружения.
+- **Blocks the demo** — the person hits a dead end, sees an unexplained error, loses what they typed, or something leaks.
+- **Undermines the impression** — it works but looks unfinished: no empty state, layout jumps, the link unfurls into nothing.
+- **Do before selling** — harmless in a demo, unavoidable at handover: licences, docs, environment variables.
 
-Внутри уровня — по порядку встречи на главном сценарии.
+Within a tier, order by where they appear on the primary journey.
 
-## Чего не делать
+## What not to do
 
-- Не править код. Нашли — записали. Чинит `/impeccable polish`, `/animate`, или человек.
-- Не отмечать ✅ по памяти или по названию файла. Только по прочитанному коду.
-- Не выдавать за находку вкусовое предпочтение. Для вкуса есть `design-taste-frontend` и `/impeccable critique`; здесь — только то, что ломается или утекает.
-- Не переписывать список под проект. Пункт, неприменимый к этому репозиторию, отмечается как неприменимый с одной строкой причины.
+- Do not edit code. Found it, wrote it down. Fixing belongs to `/impeccable polish`, `/animate`, or a person.
+- Do not tick ✅ from memory or from a filename. Only from code you read.
+- Do not dress a preference up as a finding. Taste belongs to `design-taste-frontend` and `/impeccable critique`; this skill reports only what breaks or leaks.
+- Do not rewrite the checklist for the project. An item that does not apply is marked as not applicable, with one line saying why.
