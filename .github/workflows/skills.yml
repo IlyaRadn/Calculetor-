@@ -1,0 +1,29 @@
+name: Скиллы и сборка
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    name: Зеркало скиллов и сборка страницы
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # .cursor/skills — копия .claude/skills. Разойдутся — Cursor и Claude
+      # будут читать разные версии одного скилла, и разницу заметит не тот,
+      # кто её создал.
+      - name: Зеркало для Cursor совпадает с источником
+        run: node scripts/sync-skills.mjs --check
+
+      - name: Страница собирается
+        run: node build.mjs
+
+      - name: Собранное совпадает с закоммиченным
+        run: git diff --exit-code -- docs dist

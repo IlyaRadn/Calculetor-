@@ -1,0 +1,18 @@
+---
+description: Правила репозитория и карта скиллов
+alwaysApply: true
+---
+
+Правила работы над этим репозиторием — в `AGENTS.md` в корне. Прочитать до
+первой правки.
+
+Главное, что ломается чаще всего: править нужно `index.html`, а `docs/index.html`
+и `dist/credit-calculator.html` — сборка, их перезаписывает `node build.mjs`.
+
+Продуктовый контекст — `PRODUCT.md`, визуальная система и уже занятые
+анимации — `DESIGN.md`.
+
+Скиллы лежат в `.cursor/skills/`. Для работы с интерфейсом: `animate`,
+`find-animation-opportunities`, `review-animations`, `motion-system`,
+`impeccable`, `design-taste-frontend`. Перед добавлением новой анимации —
+раздел «Движение» в `DESIGN.md`.
